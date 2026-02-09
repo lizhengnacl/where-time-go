@@ -8,6 +8,12 @@ export default defineConfig({
       index: "./src/entry.tsx",
     },
   },
+  server: {
+    port: 3001,
+    proxy: {
+      "/api": "http://localhost:3000",
+    },
+  },
   tools: {
     postcss: {
       postcssOptions: {
