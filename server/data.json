@@ -1,7 +1,156 @@
 {
-  "history": {},
-  "tags": null
-}"工作",
+  "history": {
+    "2026-02-09": [
+      {
+        "id": "hour-2026-02-09-0",
+        "hour": 0,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-1",
+        "hour": 1,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-2",
+        "hour": 2,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-3",
+        "hour": 3,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-4",
+        "hour": 4,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-5",
+        "hour": 5,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-6",
+        "hour": 6,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-7",
+        "hour": 7,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-8",
+        "hour": 8,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-9",
+        "hour": 9,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-10",
+        "hour": 10,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-11",
+        "hour": 11,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-12",
+        "hour": 12,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-13",
+        "hour": 13,
+        "content": "test",
+        "tags": [
+          "test"
+        ]
+      },
+      {
+        "id": "hour-2026-02-09-14",
+        "hour": 14,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-15",
+        "hour": 15,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-16",
+        "hour": 16,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-17",
+        "hour": 17,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-18",
+        "hour": 18,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-19",
+        "hour": 19,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-20",
+        "hour": 20,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-21",
+        "hour": 21,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-22",
+        "hour": 22,
+        "content": "",
+        "tags": []
+      },
+      {
+        "id": "hour-2026-02-09-23",
+        "hour": 23,
+        "content": "",
+        "tags": []
+      }
+    ]
+  },
+  "tags": [
+    "工作",
     "学习",
     "休息",
     "运动",
