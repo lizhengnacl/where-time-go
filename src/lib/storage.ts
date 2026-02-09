@@ -77,4 +77,5 @@ export const apiStorageDriver: StorageDriver = {
 };
 
 // 当前使用的存储驱动（切换为 apiStorageDriver 即可连接后端）
-export const storage = localStorageDriver;
+// export const storage = localStorageDriver;
+export const storage = apiStorageDriver;
