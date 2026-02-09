@@ -1,5 +1,5 @@
 const Router = require("@koa/router");
-const { openai, OPENAI_API_KEY } = require("../openai");
+const { openai, OPENAI_API_KEY, DEFAULT_MODEL } = require("../openai");
 
 const router = new Router();
 
@@ -21,7 +21,7 @@ router.post("/chat", async (ctx) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: model || "gpt-3.5-turbo",
+      model: model || DEFAULT_MODEL,
       messages,
     });
 

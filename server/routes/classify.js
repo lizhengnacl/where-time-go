@@ -1,5 +1,5 @@
 const Router = require("@koa/router");
-const { openai, OPENAI_API_KEY } = require("../openai");
+const { openai, OPENAI_API_KEY, DEFAULT_MODEL } = require("../openai");
 const { CLASSIFY_PROMPT } = require("../prompts");
 
 const router = new Router();
@@ -26,7 +26,7 @@ router.post("/classify", async (ctx) => {
     }
 
     const completion = await openai.chat.completions.create({
-      model: "deepseek-chat",
+      model: DEFAULT_MODEL,
       messages: [
         {
           role: "system",
