@@ -1,45 +1,40 @@
 /**
  * 单个时段的日程记录卡片
  */
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ScheduleItem, Tag, useSchedule } from '../context/ScheduleContext';
-import { Plus, Check, X, Sparkles, PlusCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-
-// 模拟 AI 推荐逻辑的关键词映射
-const AI_KEYWORDS: Record<string, Tag[]> = {
-  '写代码|开发|程序|bug|编程|git|代码': ['工作', '学习'],
-  '开会|会议|沟通|同步|汇报|日报': ['工作'],
-  '读书|看书|网课|学习|笔记|背单词': ['学习'],
-  '健身|跑步|运动|游泳|瑜伽|打球': ['运动'],
-  '睡觉|休息|午睡|发呆|冥想': ['休息'],
-  '吃饭|早餐|午餐|晚餐|零食|下午茶': ['其他', '休息'],
-  '游戏|电影|刷剧|短视频|玩': ['其他', '休息']
-};
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { ScheduleItem, Tag, useSchedule } from "../context/ScheduleContext";
+import { Plus, Check, X, Sparkles, PlusCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { classifier } from "../lib/classifier";
 
 export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
   const { updateItem, customTags, addCustomTag } = useSchedule();
   const [isEditing, setIsEditing] = useState(false);
   const [localContent, setLocalContent] = useState(item.content);
-  const [newTagInput, setNewTagInput] = useState('');
+  const [newTagInput, setNewTagInput] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const [aiRecommendedTags, setAiRecommendedTags] = useState<Tag[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // AI 推荐标签逻辑
-  const aiRecommendedTags = useMemo(() => {
-    if (!localContent) return [];
-    const recommended = new Set<Tag>();
-    Object.entries(AI_KEYWORDS).forEach(([pattern, tags]) => {
-      if (new RegExp(pattern, 'i').test(localContent)) {
-        tags.forEach(t => recommended.add(t));
-      }
-    });
-    // 过滤掉已经存在的标签
-    return Array.from(recommended).filter(t => !item.tags.includes(t));
-  }, [localContent, item.tags]);
+  useEffect(() => {
+    if (!isEditing || !localContent.trim()) {
+      setAiRecommendedTags([]);
+      return;
+    }
 
-  const formatHour = (h: number) => `${h.toString().padStart(2, '0')}:00`;
+    const fetchRecommendations = async () => {
+      const tags = await classifier.getRecommendations(localContent, item.tags);
+      setAiRecommendedTags(tags);
+    };
+
+    // 增加一个简单的防抖，如果是远程接口则更有意义
+    const timer = setTimeout(fetchRecommendations, 300);
+    return () => clearTimeout(timer);
+  }, [localContent, item.tags, isEditing]);
+
+  const formatHour = (h: number) => `${h.toString().padStart(2, "0")}:00`;
 
   const handleSave = () => {
     updateItem(item.hour, localContent, item.tags);
@@ -59,7 +54,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
 
   const toggleTag = (tag: Tag) => {
     const newTags = item.tags.includes(tag)
-      ? item.tags.filter(t => t !== tag)
+      ? item.tags.filter((t) => t !== tag)
       : [...item.tags, tag];
     updateItem(item.hour, item.content, newTags);
   };
@@ -68,7 +63,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
     if (newTagInput.trim()) {
       addCustomTag(newTagInput.trim());
       toggleTag(newTagInput.trim());
-      setNewTagInput('');
+      setNewTagInput("");
       setIsAddingTag(false);
     }
   };
@@ -76,20 +71,21 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
   return (
     <div id={`hour-${item.hour}`} className="relative pl-12">
       {/* 时间圆点 */}
-      <div className={`absolute left-[1.65rem] top-2 w-3 h-3 rounded-full border-2 border-background z-10 
-        ${item.content ? 'bg-primary' : 'bg-muted-foreground/30'}`} 
+      <div
+        className={`absolute left-[1.65rem] top-2 w-3 h-3 rounded-full border-2 border-background z-10 
+        ${item.content ? "bg-primary" : "bg-muted-foreground/30"}`}
       />
-      
+
       {/* 小时标签 */}
       <div className="absolute left-0 top-0 text-[10px] font-medium text-muted-foreground w-8 text-right pr-2">
         {formatHour(item.hour)}
       </div>
 
       {/* 内容卡片 */}
-      <div 
+      <div
         ref={containerRef}
         className={`group transition-all duration-300 rounded-2xl p-4 
-          ${isEditing ? 'bg-secondary/80 ring-1 ring-primary/20' : 'bg-secondary/30 hover:bg-secondary/50'}`}
+          ${isEditing ? "bg-secondary/80 ring-1 ring-primary/20" : "bg-secondary/30 hover:bg-secondary/50"}`}
         onClick={() => !isEditing && setIsEditing(true)}
         onBlur={isEditing ? handleContainerBlur : undefined}
       >
@@ -102,13 +98,13 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
               value={localContent}
               onChange={(e) => setLocalContent(e.target.value)}
               placeholder="记录这段时间..."
-              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
             <div className="flex flex-wrap gap-1.5 pt-1">
               {/* AI 推荐显示 */}
               <AnimatePresence>
                 {aiRecommendedTags.length > 0 && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
@@ -118,11 +114,12 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                       <Sparkles className="w-2.5 h-2.5" />
                       推荐
                     </div>
-                    {aiRecommendedTags.map(tag => (
+                    {aiRecommendedTags.map((tag) => (
                       <button
                         key={`ai-${tag}`}
                         onClick={(e) => {
                           e.stopPropagation();
+                          addCustomTag(tag); // 选中推荐标签时，自动将其创建到自定义标签列表中
                           toggleTag(tag);
                         }}
                         className="px-3 py-1 rounded-full text-[11px] bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 transition-colors"
@@ -135,7 +132,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                 )}
               </AnimatePresence>
 
-              {customTags.map(tag => (
+              {customTags.map((tag) => (
                 <button
                   key={tag}
                   onClick={(e) => {
@@ -143,9 +140,11 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                     toggleTag(tag);
                   }}
                   className={`px-3 py-1 rounded-full text-[11px] transition-all 
-                    ${item.tags.includes(tag) 
-                      ? 'bg-primary text-white shadow-sm' 
-                      : 'bg-white text-muted-foreground border border-muted-foreground/10 hover:bg-primary/5'}`}
+                    ${
+                      item.tags.includes(tag)
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-white text-muted-foreground border border-muted-foreground/10 hover:bg-primary/5"
+                    }`}
                 >
                   {tag}
                 </button>
@@ -160,12 +159,15 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                     value={newTagInput}
                     onChange={(e) => setNewTagInput(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleAddCustomTag();
-                      if (e.key === 'Escape') setIsAddingTag(false);
+                      if (e.key === "Enter") handleAddCustomTag();
+                      if (e.key === "Escape") setIsAddingTag(false);
                     }}
                     placeholder="标签名"
                   />
-                  <button onClick={handleAddCustomTag} className="p-1 rounded-full bg-primary text-white">
+                  <button
+                    onClick={handleAddCustomTag}
+                    className="p-1 rounded-full bg-primary text-white"
+                  >
                     <Check className="w-3 h-3" />
                   </button>
                 </div>
@@ -186,15 +188,22 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
         ) : (
           <div className="min-h-[2.5rem] flex flex-col justify-center">
             {item.content ? (
-              <p className="text-sm text-foreground/90 font-medium">{item.content}</p>
+              <p className="text-sm text-foreground/90 font-medium">
+                {item.content}
+              </p>
             ) : (
-              <p className="text-sm text-muted-foreground/40 italic">空闲时段</p>
+              <p className="text-sm text-muted-foreground/40 italic">
+                空闲时段
+              </p>
             )}
-            
+
             {item.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
-                {item.tags.map(tag => (
-                  <span key={tag} className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-semibold">
+                {item.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-0.5 rounded-md bg-primary/10 text-primary text-[10px] font-semibold"
+                  >
                     #{tag}
                   </span>
                 ))}

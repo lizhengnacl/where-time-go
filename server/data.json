@@ -82,7 +82,7 @@
       {
         "id": "hour-2026-02-09-13",
         "hour": 13,
-        "content": "test",
+        "content": "",
         "tags": [
           "test"
         ]
@@ -96,8 +96,10 @@
       {
         "id": "hour-2026-02-09-15",
         "hour": 15,
-        "content": "",
-        "tags": []
+        "content": "晚上喝的茅台不错",
+        "tags": [
+          "饮食"
+        ]
       },
       {
         "id": "hour-2026-02-09-16",

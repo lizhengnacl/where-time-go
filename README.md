@@ -64,7 +64,21 @@ export const storage = localStorageDriver;
 // export const storage = apiStorageDriver;
 ```
 
-### 3. 局域网调试
+### 3. AI 推荐方式切换
+
+应用支持本地规则推荐和远端 AI 语义识别切换，可在 `src/lib/classifier.ts` 中修改：
+
+```typescript
+// src/lib/classifier.ts
+
+// 选项 A: 本地关键词匹配 (响应快)
+export const classifier = localClassifierDriver;
+
+// 选项 B: 远端 AI 语义识别 (识别更精准)
+// export const classifier = apiClassifierDriver;
+```
+
+### 4. 局域网调试
 
 在运行 `pnpm start` 或 `pnpm dev` 时，控制台会输出 `Network` 地址。你可以使用手机扫描或直接访问该 IP 地址，在真实设备上调试交互体验。
 

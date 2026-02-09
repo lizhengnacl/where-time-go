@@ -6,10 +6,10 @@ const router = new Router();
 
 /**
  * 类型识别接口
- * POST /classify
+ * POST /api/classify
  * Body: { text: "事项描述" }
  */
-router.post("/classify", async (ctx) => {
+router.post("/api/classify", async (ctx) => {
   const { text } = ctx.request.body;
 
   if (!text) {
