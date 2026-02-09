@@ -33,3 +33,37 @@ export const localStorageDriver: StorageDriver = {
 
 // 当前使用的存储驱动
 export const storage = localStorageDriver;
+
+/**
+ * 远端 API 实现示例
+ */
+export const apiStorageDriver: StorageDriver = {
+  async saveHistory(history) {
+    const response = await fetch("/api/schedule/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ history }),
+    });
+    if (!response.ok) throw new Error("Failed to save history");
+  },
+
+  async loadHistory() {
+    const response = await fetch("/api/schedule/history");
+    const result = await response.json();
+    return result.data || {};
+  },
+
+  async saveCustomTags(tags) {
+    await fetch("/api/schedule/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tags }),
+    });
+  },
+
+  async loadCustomTags() {
+    const response = await fetch("/api/schedule/tags");
+    const result = await response.json();
+    return result.tags || null;
+  },
+};
