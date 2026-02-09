@@ -13,7 +13,8 @@ export const Home: React.FC = () => {
 
   // 自动滚动到当前小时 (仅在查看今日时)
   useEffect(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     if (currentDate !== todayStr) return;
 
     const currentHour = new Date().getHours();

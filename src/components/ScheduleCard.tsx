@@ -19,7 +19,9 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
 
   // 判断是否为当前时段
   const isToday = useMemo(() => {
-    return currentDate === new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return currentDate === todayStr;
   }, [currentDate]);
   const isCurrentHour = isToday && item.hour === new Date().getHours();
 

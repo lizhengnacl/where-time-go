@@ -43,9 +43,17 @@ export const Analytics: React.FC = () => {
   const navigate = useNavigate();
   const [drillDown, setDrillDown] = useState<DrillDownFilter | null>(null);
   const [period, setPeriod] = useState<Period>('7d');
+  
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [customRange, setCustomRange] = useState({ 
-    start: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    end: new Date().toISOString().split('T')[0]
+    start: formatDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)),
+    end: formatDate(new Date())
   });
   const detailRef = useRef<HTMLDivElement>(null);
 

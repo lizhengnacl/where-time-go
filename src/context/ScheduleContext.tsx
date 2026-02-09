@@ -119,7 +119,8 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const getHistoryDates = () => {
     const dates = Object.keys(history).sort((a, b) => b.localeCompare(a));
-    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     if (!dates.includes(today)) {
       return [today, ...dates];
     }

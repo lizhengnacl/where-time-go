@@ -1,43 +1,66 @@
 /**
  * 历史记录页面，用于查看和切换不同日期的日程
  */
-import React from 'react';
-import { useSchedule } from '../context/ScheduleContext';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Calendar as CalendarIcon, History as HistoryIcon, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { useSchedule } from "../context/ScheduleContext";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  ChevronLeft,
+  Calendar as CalendarIcon,
+  History as HistoryIcon,
+  ArrowRight,
+} from "lucide-react";
+import { motion } from "framer-motion";
 
 export const History: React.FC = () => {
   const { getHistoryDates, setCurrentDate, currentDate } = useSchedule();
   const navigate = useNavigate();
+  const location = useLocation();
   const dates = getHistoryDates();
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   const handleDateSelect = (date: string) => {
     setCurrentDate(date);
-    navigate('/');
+    navigate("/");
   };
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col">
       {/* 顶部导航 */}
-      <div className="glass-panel sticky top-0 z-20 px-6 py-4 flex items-center justify-between">
+      <div className="glass-panel sticky top-0 z-20 px-4 py-3 flex items-center justify-between border-b shadow-sm">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate('/')}
+          <button
+            onClick={() => navigate("/")}
             className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
           >
             <ChevronLeft size={24} />
           </button>
-          <h1 className="text-xl font-bold">往期记录</h1>
+
+          {/* Tab Switcher */}
+          <div className="flex p-1 bg-muted/50 rounded-xl">
+            <button
+              onClick={() => {
+                setCurrentDate(todayStr);
+                navigate("/");
+              }}
+              className="px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-muted-foreground hover:text-foreground"
+            >
+              今天
+            </button>
+            <button className="px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-primary">
+              往期
+            </button>
+          </div>
         </div>
-        
+
         {/* 日历快捷选择 */}
         <div className="relative">
           <input
             type="date"
             className="absolute inset-0 opacity-0 cursor-pointer w-full"
             onChange={(e) => e.target.value && handleDateSelect(e.target.value)}
-            max={new Date().toISOString().split('T')[0]}
+            max={todayStr}
           />
           <button className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors">
             <CalendarIcon size={20} />
@@ -55,8 +78,8 @@ export const History: React.FC = () => {
         ) : (
           dates.map((date, index) => {
             const isSelected = date === currentDate;
-            const isToday = date === new Date().toISOString().split('T')[0];
-            
+            const isToday = date === todayStr;
+
             return (
               <motion.button
                 key={date}
@@ -65,16 +88,23 @@ export const History: React.FC = () => {
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleDateSelect(date)}
                 className={`w-full text-left p-5 rounded-3xl border transition-all ${
-                  isSelected 
-                    ? 'bg-primary/5 border-primary ring-1 ring-primary' 
-                    : 'bg-white border-border hover:border-primary/40'
+                  isSelected
+                    ? "bg-primary/5 border-primary ring-1 ring-primary"
+                    : "bg-white border-border hover:border-primary/40"
                 }`}
               >
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <CalendarIcon size={14} className={isSelected ? 'text-primary' : 'text-muted-foreground'} />
-                      <span className={`text-sm font-medium ${isSelected ? 'text-primary' : ''}`}>
+                      <CalendarIcon
+                        size={14}
+                        className={
+                          isSelected ? "text-primary" : "text-muted-foreground"
+                        }
+                      />
+                      <span
+                        className={`text-sm font-medium ${isSelected ? "text-primary" : ""}`}
+                      >
                         {date}
                       </span>
                       {isToday && (
@@ -84,10 +114,14 @@ export const History: React.FC = () => {
                       )}
                     </div>
                     <div className="text-lg font-bold">
-                      {new Date(date).toLocaleDateString('zh-CN', { weekday: 'long' })}
+                      {new Date(date).toLocaleDateString("zh-CN", {
+                        weekday: "long",
+                      })}
                     </div>
                   </div>
-                  <div className={`p-2 rounded-full ${isSelected ? 'bg-primary text-white' : 'bg-muted text-muted-foreground'}`}>
+                  <div
+                    className={`p-2 rounded-full ${isSelected ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
+                  >
                     <ArrowRight size={18} />
                   </div>
                 </div>
