@@ -1,12 +1,14 @@
 {
-  "name": "where-time-go-server",
+  "name": "where-time-go",
   "version": "1.0.0",
   "private": true,
   "description": "CommonJS Node.js server to access OpenAI API",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
-    "dev": "NODE_ENV=development node server/index.js"
+    "dev": "rsbuild dev --open",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
   },
   "engines": {
     "node": ">=18"
@@ -17,6 +19,27 @@
     "dotenv": "^17.2.4",
     "koa": "^2.15.3",
     "koa-bodyparser": "^4.4.1",
-    "openai": "^6.18.0"
+    "openai": "^6.18.0",
+    "lucide-react": "0.294.0",
+    "framer-motion": "^11.12.0",
+    "clsx": "2.0.0",
+    "tailwind-merge": "2.0.0",
+    "date-fns": "2.30.0",
+    "react-router-dom": "6.18.0",
+    "recharts": "2.10.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@nextui-org/react": "^2.6.11",
+    "@nextui-org/system": "^2.4.6",
+    "@nextui-org/theme": "^2.4.5"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^0.6.5",
+    "@rsbuild/plugin-react": "^0.6.5",
+    "@types/react": "^18.2.75",
+    "@types/react-dom": "^18.2.24",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15"
   }
 }
