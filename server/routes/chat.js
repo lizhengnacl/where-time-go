@@ -1,12 +1,7 @@
 const Router = require("@koa/router");
-const { openai, OPENAI_API_KEY } = require("./openai");
+const { openai, OPENAI_API_KEY } = require("../openai");
 
 const router = new Router();
-
-// 健康检查
-router.get("/health", async (ctx) => {
-  ctx.body = { status: "ok" };
-});
 
 // OpenAI 聊天接口
 router.post("/chat", async (ctx) => {
