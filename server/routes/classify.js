@@ -1,5 +1,6 @@
 const Router = require("@koa/router");
 const { openai, OPENAI_API_KEY } = require("../openai");
+const { CLASSIFY_PROMPT } = require("../prompts");
 
 const router = new Router();
 
@@ -29,22 +30,24 @@ router.post("/classify", async (ctx) => {
       messages: [
         {
           role: "system",
-          content: "你是一个高效的任务分类专家。请分析用户输入的事项描述，并返回一个简短的分类标签（例如：运动、工作、学习、饮食、休息、娱乐等）。只需输出标签名，不要输出任何多余的解释或标点符号。"
+          content: CLASSIFY_PROMPT,
         },
         {
           role: "user",
-          content: text
-        }
+          content: text,
+        },
       ],
       temperature: 0.1, // 使用低随机性以获得更一致的分类
     });
 
-    const category = completion.choices[0].message.content.replace(/[。.，,]/g, "").trim();
+    const category = completion.choices[0].message.content
+      .replace(/[。.，,]/g, "")
+      .trim();
 
     ctx.body = {
       text,
       category,
-      usage: completion.usage
+      usage: completion.usage,
     };
   } catch (e) {
     console.error("Classification API Error:", e);
