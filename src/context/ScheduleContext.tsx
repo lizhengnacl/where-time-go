@@ -34,9 +34,13 @@ const ScheduleContext = createContext<ScheduleContextType | undefined>(
 export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [currentDate, setCurrentDate] = useState(
-    () => new Date().toISOString().split("T")[0],
-  );
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  });
   const [customTags, setCustomTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [history, setHistory] = useState<Record<string, ScheduleItem[]>>({});
   const [isLoaded, setIsLoaded] = useState(false);

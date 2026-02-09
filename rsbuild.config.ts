@@ -17,6 +17,9 @@ export default defineConfig({
       root: "dist",
     },
   },
+  dev: {
+    assetPrefix: "/time/",
+  },
   server: {
     port: 3000,
     proxy: {
