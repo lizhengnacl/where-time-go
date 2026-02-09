@@ -44,18 +44,26 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
   const [customTags, setCustomTags] = useState<Tag[]>(DEFAULT_TAGS);
   const [history, setHistory] = useState<Record<string, ScheduleItem[]>>({});
   const [isLoaded, setIsLoaded] = useState(false);
+  const isFirstRender = React.useRef(true);
 
   // 初始化加载数据
   useEffect(() => {
     const initData = async () => {
-      const [savedHistory, savedTags] = await Promise.all([
-        storage.loadHistory(),
-        storage.loadCustomTags(),
-      ]);
+      try {
+        const [savedHistory, savedTags] = await Promise.all([
+          storage.loadHistory(),
+          storage.loadCustomTags(),
+        ]);
 
-      if (savedHistory) setHistory(savedHistory);
-      if (savedTags) setCustomTags(savedTags);
-      setIsLoaded(true);
+        if (savedHistory && Object.keys(savedHistory).length > 0) {
+          setHistory(savedHistory);
+        }
+        if (savedTags) setCustomTags(savedTags);
+      } catch (error) {
+        console.error("Initialization failed:", error);
+      } finally {
+        setIsLoaded(true);
+      }
     };
     initData();
   }, []);
@@ -71,15 +79,26 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // 数据持久化
   useEffect(() => {
-    if (isLoaded) {
-      storage.saveHistory(history);
+    if (!isLoaded) return;
+
+    // 跳过加载后的第一次自动保存，只有当 history 真正改变时才保存
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
+
+    const timer = setTimeout(() => {
+      storage.saveHistory(history);
+    }, 500); // 添加防抖，避免频繁写入
+
+    return () => clearTimeout(timer);
   }, [history, isLoaded]);
 
   useEffect(() => {
-    if (isLoaded) {
-      storage.saveCustomTags(customTags);
-    }
+    if (!isLoaded) return;
+
+    // 标签也添加同样的逻辑
+    storage.saveCustomTags(customTags);
   }, [customTags, isLoaded]);
 
   const addCustomTag = (tag: Tag) => {
