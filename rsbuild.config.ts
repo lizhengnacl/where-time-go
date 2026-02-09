@@ -5,18 +5,14 @@ export default defineConfig({
   plugins: [pluginReact()],
   source: {
     entry: {
-      index: './src/entry.tsx',
+      index: "./src/entry.tsx",
     },
   },
   tools: {
     postcss: {
       postcssOptions: {
-        plugins: [
-          require('tailwindcss'),
-          require('autoprefixer'),
-        ],
+        plugins: [require("tailwindcss"), require("autoprefixer")],
       },
     },
   },
 });
-      
