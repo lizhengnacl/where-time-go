@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <title>迹时 - Timary</title>
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="/time/manifest.json" />
     <meta name="theme-color" content="#6366f1" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,7 +24,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("sw.js")
+            .register("/time/sw.js")
             .then((reg) => console.log("SW registered:", reg))
             .catch((err) => console.error("SW registration failed:", err));
         });
