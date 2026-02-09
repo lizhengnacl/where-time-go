@@ -32,7 +32,9 @@ pnpm build
 pnpm start
 ```
 
-启动后，可以通过控制台显示的 `Local` 或 `Network` (局域网) 地址访问应用。
+启动后，默认可以通过 `http://localhost:3001/time` 访问应用。
+
+> **注意**：线上环境已配置为通过 `/time` 子路径访问（如 `https://simpletalkai.com/time`）。
 
 ---
 
@@ -46,9 +48,9 @@ pnpm start
 pnpm dev
 ```
 
-- **前端地址**: `http://localhost:3001`
-- **后端地址**: `http://localhost:3000`
-- **代理逻辑**: 前端请求 `/api/*` 会自动代理到后端服务，无需担心跨域问题。
+- **前端地址**: `http://localhost:3000/time`
+- **后端地址**: `http://localhost:3001/time`
+- **代理逻辑**: 前端请求 `/time/api/*` 会自动代理到后端服务。
 
 ### 2. 存储方式切换
 

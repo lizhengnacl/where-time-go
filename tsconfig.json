@@ -1,17 +1,23 @@
 {
   "compilerOptions": {
-    "declaration": false,
-    "jsx": "preserve",
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
     "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "strict": false,
-    "types": ["react", "react-dom"],
-    "target": "ES2017",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true
+    }
   },
   "include": ["src"]
 }

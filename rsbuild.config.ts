@@ -12,6 +12,7 @@ export default defineConfig({
     template: "./public/index.html",
   },
   output: {
+    assetPrefix: "/time/",
     distPath: {
       root: "dist",
     },
@@ -19,7 +20,7 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      "/api": "http://localhost:3001",
+      "/time/api": "http://localhost:3001",
     },
   },
   tools: {

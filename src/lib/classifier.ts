@@ -35,13 +35,15 @@ export const localClassifierDriver: ClassifierDriver = {
   },
 };
 
+const API_BASE = "/time/api";
+
 /**
  * 远端 AI 驱动 (预留)
  */
 export const apiClassifierDriver: ClassifierDriver = {
   async getRecommendations(text, currentTags) {
     try {
-      const response = await fetch("/api/classify", {
+      const response = await fetch(`${API_BASE}/classify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text }),
