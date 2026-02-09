@@ -31,11 +31,8 @@ export const localStorageDriver: StorageDriver = {
   },
 };
 
-// 当前使用的存储驱动
-export const storage = localStorageDriver;
-
 /**
- * 远端 API 实现示例
+ * 远端 API 实现
  */
 export const apiStorageDriver: StorageDriver = {
   async saveHistory(history) {
@@ -44,26 +41,40 @@ export const apiStorageDriver: StorageDriver = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ history }),
     });
-    if (!response.ok) throw new Error("Failed to save history");
+    if (!response.ok) throw new Error("Failed to save history to server");
   },
 
   async loadHistory() {
-    const response = await fetch("/api/schedule/history");
-    const result = await response.json();
-    return result.data || {};
+    try {
+      const response = await fetch("/api/schedule/history");
+      const result = await response.json();
+      return result.data || {};
+    } catch (error) {
+      console.error("Failed to load history from server:", error);
+      return {};
+    }
   },
 
   async saveCustomTags(tags) {
-    await fetch("/api/schedule/tags", {
+    const response = await fetch("/api/schedule/tags", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tags }),
     });
+    if (!response.ok) throw new Error("Failed to save tags to server");
   },
 
   async loadCustomTags() {
-    const response = await fetch("/api/schedule/tags");
-    const result = await response.json();
-    return result.tags || null;
+    try {
+      const response = await fetch("/api/schedule/tags");
+      const result = await response.json();
+      return result.tags || null;
+    } catch (error) {
+      console.error("Failed to load tags from server:", error);
+      return null;
+    }
   },
 };
+
+// 当前使用的存储驱动（切换为 apiStorageDriver 即可连接后端）
+export const storage = localStorageDriver;

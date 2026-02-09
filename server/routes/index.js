@@ -2,6 +2,7 @@ const Router = require("@koa/router");
 const healthRouter = require("./health");
 const chatRouter = require("./chat");
 const classifyRouter = require("./classify");
+const scheduleRouter = require("./schedule");
 
 const router = new Router();
 
@@ -9,5 +10,6 @@ const router = new Router();
 router.use(healthRouter.routes());
 router.use(chatRouter.routes());
 router.use(classifyRouter.routes());
+router.use(scheduleRouter.routes());
 
 module.exports = router;
