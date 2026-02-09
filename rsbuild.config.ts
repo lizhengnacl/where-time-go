@@ -8,6 +8,9 @@ export default defineConfig({
       index: "./src/entry.tsx",
     },
   },
+  html: {
+    template: "./public/index.html",
+  },
   output: {
     distPath: {
       root: "dist",
