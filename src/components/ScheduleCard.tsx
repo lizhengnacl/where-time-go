@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { classifier } from "../lib/classifier";
 
 export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
-  const { updateItem, customTags, addCustomTag } = useSchedule();
+  const { updateItem, customTags, addCustomTag, currentDate } = useSchedule();
   const [isEditing, setIsEditing] = useState(false);
   const [localContent, setLocalContent] = useState(item.content);
   const [newTagInput, setNewTagInput] = useState("");
@@ -16,6 +16,12 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
   const [aiRecommendedTags, setAiRecommendedTags] = useState<Tag[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 判断是否为当前时段
+  const isToday = useMemo(() => {
+    return currentDate === new Date().toISOString().split("T")[0];
+  }, [currentDate]);
+  const isCurrentHour = isToday && item.hour === new Date().getHours();
 
   // AI 推荐标签逻辑
   useEffect(() => {
@@ -29,8 +35,8 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
       setAiRecommendedTags(tags);
     };
 
-    // 增加一个简单的防抖，如果是远程接口则更有意义
-    const timer = setTimeout(fetchRecommendations, 300);
+    // 增加防抖时间至 1000ms，确保用户基本输入完成后再触发推荐，减少请求频率
+    const timer = setTimeout(fetchRecommendations, 1000);
     return () => clearTimeout(timer);
   }, [localContent, item.tags, isEditing]);
 
@@ -73,11 +79,13 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
       {/* 时间圆点 */}
       <div
         className={`absolute left-[1.65rem] top-2 w-3 h-3 rounded-full border-2 border-background z-10 
-        ${item.content ? "bg-primary" : "bg-muted-foreground/30"}`}
+        ${isCurrentHour ? "bg-primary scale-125 shadow-[0_0_8px_hsl(var(--primary)/0.5)]" : item.content ? "bg-primary" : "bg-muted-foreground/30"}`}
       />
 
       {/* 小时标签 */}
-      <div className="absolute left-0 top-0 text-[10px] font-medium text-muted-foreground w-8 text-right pr-2">
+      <div
+        className={`absolute left-0 top-0 text-[10px] font-medium w-8 text-right pr-2 ${isCurrentHour ? "text-primary font-bold" : "text-muted-foreground"}`}
+      >
         {formatHour(item.hour)}
       </div>
 
@@ -85,7 +93,8 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
       <div
         ref={containerRef}
         className={`group transition-all duration-300 rounded-2xl p-4 
-          ${isEditing ? "bg-secondary/80 ring-1 ring-primary/20" : "bg-secondary/30 hover:bg-secondary/50"}`}
+          ${isCurrentHour ? "ring-2 ring-primary/30 shadow-md bg-white animate-pulse-subtle" : ""}
+          ${isEditing ? "bg-secondary/80 ring-1 ring-primary/20" : isCurrentHour ? "" : "bg-secondary/30 hover:bg-secondary/50"}`}
         onClick={() => !isEditing && setIsEditing(true)}
         onBlur={isEditing ? handleContainerBlur : undefined}
       >
