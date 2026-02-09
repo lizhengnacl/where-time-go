@@ -3,13 +3,13 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL;
-const DEFAULT_MODEL = process.env.OPENAI_MODEL;
+const OPENAI_API_KEY = process.env.WTG_OPENAI_API_KEY;
+const OPENAI_BASE_URL = process.env.WTG_OPENAI_BASE_URL;
+const DEFAULT_MODEL = process.env.WTG_OPENAI_MODEL || "gpt-3.5-turbo";
 
 if (!OPENAI_API_KEY) {
   console.warn(
-    "⚠️  Warning: OPENAI_API_KEY is not set in environment variables.",
+    "⚠️  Warning: WTG_OPENAI_API_KEY is not set in environment variables.",
   );
 } else {
   // 输出脱敏后的 API Key 方便调试

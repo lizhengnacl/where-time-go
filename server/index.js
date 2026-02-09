@@ -8,10 +8,8 @@ const dotenv = require("dotenv");
 const errorHandler = require("./middleware/errorHandler");
 const router = require("./routes/index");
 
-dotenv.config();
-
 const app = new Koa();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.WTG_PORT || 3001;
 const BASE_PATH = "/time";
 
 /**
