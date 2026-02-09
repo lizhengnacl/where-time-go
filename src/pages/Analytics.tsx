@@ -477,7 +477,7 @@ export const Analytics: React.FC = () => {
             洞察与建议
           </h3>
           <div className="text-sm text-muted-foreground space-y-2">
-            <p>• 每一个数据点都记录着你真实的时光流转。</p>
+            <p>• 每一个数据点都记录着你真实的“迹时”。</p>
             <p>• 点击图表可进一步下钻，回顾高效时段的专注点。</p>
             <p>• 坚持记录，让数据为你揭示时间利用的规律。</p>
           </div>

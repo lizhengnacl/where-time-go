@@ -1,8 +1,8 @@
 {
-  "name": "where-time-go",
+  "name": "timary",
   "version": "1.0.0",
   "private": true,
-  "description": "CommonJS Node.js server to access OpenAI API",
+  "description": "迹时 - Timary: 记录时光流转",
   "main": "server/index.js",
   "scripts": {
     "start": "node server/index.js",
