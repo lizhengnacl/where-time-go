@@ -8,6 +8,11 @@ export default defineConfig({
       index: "./src/entry.tsx",
     },
   },
+  output: {
+    distPath: {
+      root: "dist",
+    },
+  },
   server: {
     port: 3001,
     proxy: {
