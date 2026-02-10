@@ -16,19 +16,12 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Cell as RechartsCell,
-} from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
+import { AnalyticsStatCards } from "../components/AnalyticsStatCards";
+import { AnalyticsCategoryChart } from "../components/AnalyticsCategoryChart";
+import { AnalyticsTrendChart } from "../components/AnalyticsTrendChart";
+import { AnalyticsGoldenHours } from "../components/AnalyticsGoldenHours";
+import { AnalyticsDrillDownList } from "../components/AnalyticsDrillDownList";
 
 const TAG_COLORS: Record<string, string> = {
   工作: "hsl(var(--primary))",
@@ -329,349 +322,49 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* 核心摘要 */}
-        <div className="grid grid-cols-2 gap-4">
-          <motion.div
-            key={`records-${period}-${customRange.start}-${customRange.end}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-4 rounded-3xl bg-primary/5 border border-primary/10 flex flex-col items-center justify-center text-center"
-          >
-            <span className="text-xs text-muted-foreground mb-1">
-              {period === "all"
-                ? "累计"
-                : period === "custom"
-                  ? "选定时段"
-                  : `近${analysisData.periodDays}日`}
-              记录
-            </span>
-            <div className="text-2xl font-bold text-primary">
-              {analysisData.totalRecords}
-              <span className="text-xs ml-1 font-normal opacity-70">条</span>
-            </div>
-          </motion.div>
-          <motion.div
-            key={`days-${period}-${customRange.start}-${customRange.end}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="p-4 rounded-3xl bg-secondary/5 border border-secondary/10 flex flex-col items-center justify-center text-center"
-          >
-            <span className="text-xs text-muted-foreground mb-1">分析天数</span>
-            <div className="text-2xl font-bold text-secondary">
-              {analysisData.periodDays}
-              <span className="text-xs ml-1 font-normal opacity-70">天</span>
-            </div>
-          </motion.div>
-        </div>
+        <AnalyticsStatCards
+          period={period}
+          periodDays={analysisData.periodDays}
+          totalRecords={analysisData.totalRecords}
+          customRange={customRange}
+        />
 
         {/* 1. 分类占比 */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-blue-500/10 text-blue-500 rounded-lg">
-                <PieIcon size={18} />
-              </div>
-              <h2 className="text-lg font-bold">时间分配占比</h2>
-            </div>
-            {drillDown?.type === "tag" && (
-              <button
-                onClick={() => setDrillDown(null)}
-                className="text-xs text-primary flex items-center gap-1"
-              >
-                清除筛选 <XCircle size={12} />
-              </button>
-            )}
-          </div>
-          <div className="h-[280px] w-full bg-background rounded-3xl border border-border p-4 shadow-sm relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analysisData.pieData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={renderCustomizedLabel}
-                  labelLine={false}
-                  onClick={(data) => {
-                    if (data && data.name) {
-                      handleDrillDown({ type: "tag", value: data.name as Tag });
-                    }
-                  }}
-                  className="cursor-pointer"
-                >
-                  {analysisData.pieData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={getTagColor(entry.name)}
-                      stroke={
-                        drillDown?.type === "tag" &&
-                        drillDown.value === entry.name
-                          ? "hsl(var(--primary))"
-                          : "none"
-                      }
-                      strokeWidth={2}
-                      style={{ outline: "none" }}
-                      opacity={
-                        drillDown?.type === "tag" &&
-                        drillDown.value !== entry.name
-                          ? 0.3
-                          : 1
-                      }
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "1px solid hsl(var(--border))",
-                    backgroundColor: "hsl(var(--background))",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    padding: "8px 12px",
-                    fontSize: "12px",
-                    color: "hsl(var(--foreground))",
-                  }}
-                  itemStyle={{
-                    color: "hsl(var(--foreground))",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                  分类占比
-                </div>
-                <div className="text-xs font-bold text-primary mt-1">
-                  点击筛选
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <AnalyticsCategoryChart
+          pieData={analysisData.pieData}
+          drillDown={drillDown}
+          onDrillDown={handleDrillDown}
+          onClearFilter={() => setDrillDown(null)}
+          renderCustomizedLabel={renderCustomizedLabel}
+          getTagColor={getTagColor}
+        />
 
         {/* 2. 活跃趋势 */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-purple-500/10 text-purple-500 rounded-lg">
-                <BarChart3 size={18} />
-              </div>
-              <h2 className="text-lg font-bold">记录趋势</h2>
-            </div>
-            {drillDown?.type === "date" && (
-              <button
-                onClick={() => setDrillDown(null)}
-                className="text-xs text-primary flex items-center gap-1"
-              >
-                重置视图 <XCircle size={12} />
-              </button>
-            )}
-          </div>
-          <div
-            className={`w-full bg-background rounded-3xl border border-border p-4 shadow-sm ${
-              period === "all" || period === "custom"
-                ? "h-[240px] overflow-x-auto overflow-y-hidden"
-                : "h-[200px]"
-            }`}
-          >
-            <div
-              className={
-                period === "all" || period === "custom"
-                  ? "min-w-[600px] h-full"
-                  : "w-full h-full"
-              }
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analysisData.dailyTrend}>
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))" }}
-                    style={{ fontSize: "10px" }}
-                    interval={
-                      period === "all" || period === "custom"
-                        ? Math.max(
-                            0,
-                            Math.floor(analysisData.dailyTrend.length / 8),
-                          )
-                        : 0
-                    }
-                  />
-                  <YAxis hide />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
-                    labelStyle={{
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                      marginBottom: "4px",
-                      color: "hsl(var(--foreground))",
-                    }}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "1px solid hsl(var(--border))",
-                      backgroundColor: "hsl(var(--background))",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      padding: "8px 12px",
-                    }}
-                    formatter={(value: number) => [`${value} 条`, "当日记录"]}
-                  />
-                  <Bar
-                    dataKey="count"
-                    name="记录数"
-                    fill="hsl(var(--primary))"
-                    radius={[4, 4, 0, 0]}
-                    barSize={period === "all" || period === "custom" ? 12 : 20}
-                    onClick={(data) => {
-                      if (data && data.fullDate) {
-                        handleDrillDown({ type: "date", value: data.fullDate });
-                      }
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {analysisData.dailyTrend.map((entry, index) => (
-                      <RechartsCell
-                        key={`cell-${index}`}
-                        opacity={
-                          drillDown?.type === "date" &&
-                          drillDown.value !== entry.fullDate
-                            ? 0.3
-                            : 1
-                        }
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </section>
+        <AnalyticsTrendChart
+          dailyTrend={analysisData.dailyTrend}
+          period={period}
+          drillDown={drillDown}
+          onDrillDown={handleDrillDown}
+          onClearFilter={() => setDrillDown(null)}
+        />
 
         {/* 3. 黄金时间洞察 */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-orange-500/10 text-orange-500 rounded-lg">
-                <Zap size={18} />
-              </div>
-              <h2 className="text-lg font-bold">黄金效率时段</h2>
-            </div>
-            {drillDown?.type === "hour" && (
-              <button
-                onClick={() => setDrillDown(null)}
-                className="text-xs text-primary flex items-center gap-1"
-              >
-                清除筛选 <XCircle size={12} />
-              </button>
-            )}
-          </div>
-          <div className="grid gap-3">
-            {analysisData.goldenHours.map((gh, idx) => (
-              <motion.button
-                key={gh.hour}
-                whileTap={{ scale: 0.98 }}
-                onClick={() =>
-                  handleDrillDown({ type: "hour", value: gh.hour })
-                }
-                className={`flex items-center gap-4 p-4 rounded-2xl border transition-all text-left w-full ${
-                  drillDown?.type === "hour" && drillDown.value === gh.hour
-                    ? "bg-orange-50 border-orange-200 ring-2 ring-orange-200/50"
-                    : "bg-background border-border hover:border-orange-100 dark:hover:border-orange-900"
-                }`}
-              >
-                <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 font-bold">
-                  {idx + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="font-bold">
-                    {gh.hour}:00 - {gh.hour + 1}:00
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    该时段专注 {gh.count} 次
-                  </div>
-                </div>
-                <Target className="text-orange-200" size={24} />
-              </motion.button>
-            ))}
-            {analysisData.goldenHours.length === 0 && (
-              <div className="text-center py-6 text-muted-foreground text-sm italic">
-                记录更多“工作”或“学习”内容来解锁分析
-              </div>
-            )}
-          </div>
-        </section>
+        <AnalyticsGoldenHours
+          goldenHours={analysisData.goldenHours}
+          drillDown={drillDown}
+          onDrillDown={handleDrillDown}
+          onClearFilter={() => setDrillDown(null)}
+        />
 
-        {/* 下钻详情区域 */}
-        <div ref={detailRef} className="scroll-mt-24">
-          <AnimatePresence mode="wait">
-            {drillDown && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-4"
-              >
-                <div className="flex items-center justify-between border-b border-border pb-2">
-                  <h2 className="text-lg font-bold flex items-center gap-2">
-                    详情列表
-                    <span className="text-xs font-normal bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                      {filteredRecords.length}
-                    </span>
-                  </h2>
-                  <button
-                    onClick={() => setDrillDown(null)}
-                    className="p-1 hover:bg-muted rounded-full transition-colors"
-                  >
-                    <XCircle size={20} className="text-muted-foreground" />
-                  </button>
-                </div>
+        {/* 4. 详细记录回顾 */}
+        <AnalyticsDrillDownList
+          drillDown={drillDown}
+          filteredRecords={filteredRecords}
+          onJumpToRecord={handleJumpToRecord}
+          detailRef={detailRef}
+        />
 
-                <div className="space-y-3">
-                  {filteredRecords.map(({ date, item }, idx) => (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      key={`${date}-${item.hour}`}
-                      onClick={() => handleJumpToRecord(date)}
-                      className="bg-background p-4 rounded-2xl border border-border shadow-sm flex flex-col gap-2 active:scale-[0.98] transition-transform cursor-pointer group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar size={10} /> {date}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock size={10} /> {item.hour}:00
-                          </span>
-                        </div>
-                        <div className="flex gap-1 flex-wrap justify-end max-w-[50%]">
-                          {item.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-[10px] px-1.5 py-0.5 rounded-md text-white whitespace-nowrap"
-                              style={{ backgroundColor: getTagColor(tag) }}
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm font-medium leading-relaxed group-hover:text-primary transition-colors">
-                        {item.content}
-                      </p>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.section>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* 时间管理建议 */}
+        {/* 5. 洞察与建议 */}
         <section className="p-5 rounded-3xl bg-muted/50 border border-muted-foreground/10 space-y-3">
           <h3 className="font-bold flex items-center gap-2">
             <Coffee size={18} className="text-primary" />
