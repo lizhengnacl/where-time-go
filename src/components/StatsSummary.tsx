@@ -2,13 +2,10 @@
  * 顶部统计摘要组件
  */
 import React from "react";
-import { useSchedule, Tag } from "../context/ScheduleContext";
+import { useSchedule } from "../context/ScheduleContext";
 import { useTheme } from "../context/ThemeContext";
 import {
-  PieChart,
-  Clock,
   Calendar,
-  History,
   BarChart2,
   Sun,
   Moon,
@@ -52,110 +49,38 @@ export const StatsSummary: React.FC = () => {
   });
 
   return (
-    <div className="glass-panel sticky top-0 z-20 px-4 py-3 shadow-sm border-b">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          {/* Logo Section */}
-          <div
-            onClick={() => navigate("/")}
-            className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity shrink-0 mr-1"
-          >
-            <img
-              src="/time/logo.svg"
-              alt="Timary Logo"
-              className="w-6 h-6 rounded-md shadow-sm"
-            />
-            <span className="text-sm font-black bg-gradient-to-br from-blue-500 to-blue-700 bg-clip-text text-transparent hidden xs:block">
-              迹时
-            </span>
-          </div>
-
-          {/* Tab Switcher */}
-          <div className="flex p-1 bg-muted/50 rounded-xl">
-            <button
-              onClick={() => {
-                setCurrentDate(todayStr);
-                if (location.pathname !== "/") navigate("/");
-              }}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                isToday && !isHistoryPage
-                  ? "bg-background shadow-sm text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              今天
-            </button>
-            <button
-              onClick={() => navigate("/history")}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                isHistoryPage || (!isToday && !isHistoryPage)
-                  ? "bg-background shadow-sm text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              往期
-            </button>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="relative group">
-              <span className="text-[10px] text-muted-foreground leading-tight flex items-center gap-0.5 cursor-pointer hover:text-primary transition-colors">
-                <Calendar size={10} />
-                {displayDate}
-                {!isToday && !isHistoryPage && (
-                  <span className="ml-1 text-[8px] bg-primary/10 text-primary px-1 rounded-sm">
-                    历史
-                  </span>
-                )}
-              </span>
-              <input
-                type="date"
-                className="absolute inset-0 opacity-0 cursor-pointer w-full"
-                onChange={(e) =>
-                  e.target.value && setCurrentDate(e.target.value)
-                }
-                max={todayStr}
-              />
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <div className="w-16 h-1 bg-muted rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-primary transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-medium text-primary">
-                {recordedCount}/24
-              </span>
-              <div
-                className="flex items-center ml-1"
-                title={isLoggedIn ? "云端同步中" : "仅本地存储"}
-              >
-                {isLoggedIn ? (
-                  <Cloud size={10} className="text-green-500" />
-                ) : (
-                  <CloudOff size={10} className="text-amber-500" />
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="glass-panel sticky top-0 z-20 shadow-sm border-b bg-background/80 backdrop-blur-md">
+      {/* 第一行：Logo 与 全局操作 */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <img
+            src="/time/logo.svg"
+            alt="Timary Logo"
+            className="w-7 h-7 rounded-lg shadow-sm"
+          />
+          <span className="text-base font-black bg-gradient-to-br from-blue-500 to-blue-700 bg-clip-text text-transparent">
+            迹时
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+            className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
             aria-label="Toggle theme"
           >
-            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+            {theme === "light" ? <Moon size={19} /> : <Sun size={19} />}
           </button>
 
           <button
             onClick={() => navigate("/analytics")}
-            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+            className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
             title="数据统计"
           >
-            <BarChart2 size={18} />
+            <BarChart2 size={19} />
           </button>
 
           {localStorage.getItem("user") ? (
@@ -164,46 +89,131 @@ export const StatsSummary: React.FC = () => {
                 localStorage.removeItem("user");
                 window.location.href = "/time/login";
               }}
-              className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-danger transition-colors"
+              className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-danger"
               title="退出登录"
             >
-              <LogOut size={18} />
+              <LogOut size={19} />
             </button>
           ) : (
             <button
               onClick={() => navigate("/login")}
-              className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+              className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
               title="登录"
             >
-              <User size={18} />
+              <User size={19} />
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-        {Object.entries(stats).map(([tag, count]) => (
-          <div
-            key={tag}
-            className="flex items-center gap-1.5 bg-muted/30 border border-border/50 px-2 py-1 rounded-md shrink-0 transition-colors hover:bg-muted/50"
-          >
-            <div
-              className={`w-1.5 h-1.5 rounded-full ${getTagColor(tag)} shadow-[0_0_4px_rgba(0,0,0,0.1)]`}
-            />
-            <span className="text-[10px] font-medium whitespace-nowrap">
-              {tag}
-            </span>
-            <span className="text-[10px] text-muted-foreground font-mono">
-              {count}h
-            </span>
+      {/* 第二行：核心数据卡片 */}
+      <div className="px-4 pb-3">
+        <div className="bg-muted/40 rounded-2xl p-4 border border-border/40 shadow-inner">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-col">
+              <div className="relative group flex items-center gap-1.5">
+                <span className="text-sm font-bold flex items-center gap-1.5 cursor-pointer hover:text-primary transition-colors">
+                  <Calendar size={14} className="text-primary" />
+                  {displayDate}
+                  {!isToday && !isHistoryPage && (
+                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold">
+                      历史
+                    </span>
+                  )}
+                </span>
+                <input
+                  type="date"
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                  onChange={(e) =>
+                    e.target.value && setCurrentDate(e.target.value)
+                  }
+                  max={todayStr}
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                {isLoggedIn ? (
+                  <>
+                    <Cloud size={10} className="text-green-500" />
+                    云端同步已开启
+                  </>
+                ) : (
+                  <>
+                    <CloudOff size={10} className="text-amber-500" />
+                    本地模式，建议登录
+                  </>
+                )}
+              </p>
+            </div>
+
+            {/* 今天/往期 切换器 */}
+            <div className="flex p-1 bg-background/60 rounded-xl border border-border/20 shadow-sm">
+              <button
+                onClick={() => {
+                  setCurrentDate(todayStr);
+                  if (location.pathname !== "/") navigate("/");
+                }}
+                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  isToday && !isHistoryPage
+                    ? "bg-background shadow-sm text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                今天
+              </button>
+              <button
+                onClick={() => navigate("/history")}
+                className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  isHistoryPage || (!isToday && !isHistoryPage)
+                    ? "bg-background shadow-sm text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                往期
+              </button>
+            </div>
           </div>
-        ))}
-        {Object.keys(stats).length === 0 && (
-          <div className="text-[10px] text-muted-foreground/60 py-1 italic">
-            专注成就更好的自己 ✨
+
+          <div className="space-y-2">
+            <div className="flex justify-between items-end">
+              <span className="text-xs font-bold text-foreground">
+                今日进度
+              </span>
+              <span className="text-xs font-mono font-bold text-primary">
+                {recordedCount}{" "}
+                <span className="text-muted-foreground font-normal">/ 24</span>
+              </span>
+            </div>
+            <div className="w-full h-2 bg-background/50 rounded-full overflow-hidden border border-border/10 shadow-inner">
+              <div
+                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* 第三行：标签统计滚动条 */}
+      {Object.keys(stats).length > 0 && (
+        <div className="flex gap-2 overflow-x-auto no-scrollbar px-4 pb-3">
+          {Object.entries(stats).map(([tag, count]) => (
+            <div
+              key={tag}
+              className="flex items-center gap-2 bg-background/40 border border-border/40 px-3 py-1.5 rounded-xl shrink-0 transition-all hover:border-primary/30 hover:bg-background/60 group"
+            >
+              <div
+                className={`w-2 h-2 rounded-full ${getTagColor(tag)} shadow-sm group-hover:scale-110 transition-transform`}
+              />
+              <span className="text-[11px] font-bold whitespace-nowrap">
+                {tag}
+              </span>
+              <span className="text-[11px] text-muted-foreground font-mono bg-muted/50 px-1.5 rounded-md">
+                {count}h
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
