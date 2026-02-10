@@ -12,6 +12,7 @@ import {
   BarChart2,
   Sun,
   Moon,
+  LogOut,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -141,6 +142,17 @@ export const StatsSummary: React.FC = () => {
             title="数据统计"
           >
             <BarChart2 size={18} />
+          </button>
+
+          <button
+            onClick={() => {
+              localStorage.removeItem("user");
+              window.location.href = "/time/login";
+            }}
+            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-danger transition-colors"
+            title="退出登录"
+          >
+            <LogOut size={18} />
           </button>
         </div>
       </div>

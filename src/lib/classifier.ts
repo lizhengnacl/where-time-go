@@ -42,6 +42,20 @@ export const localClassifierDriver: ClassifierDriver = {
 const API_BASE = "/time/api";
 
 /**
+ * 辅助函数：获取认证头
+ */
+function getAuthHeader(): Record<string, string> {
+  const userStr = localStorage.getItem("user");
+  if (!userStr) return {};
+  try {
+    const user = JSON.parse(userStr);
+    return { Authorization: `Bearer ${user.token}` };
+  } catch (e) {
+    return {};
+  }
+}
+
+/**
  * 远端 AI 驱动 (预留)
  */
 export const apiClassifierDriver: ClassifierDriver = {
@@ -49,7 +63,10 @@ export const apiClassifierDriver: ClassifierDriver = {
     try {
       const response = await fetch(`${API_BASE}/classify`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeader(),
+        },
         body: JSON.stringify({ text, excludeTags }),
       });
       const result = await response.json();

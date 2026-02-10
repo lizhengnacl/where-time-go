@@ -34,13 +34,30 @@ export const localStorageDriver: StorageDriver = {
 const API_BASE = "/time/api";
 
 /**
+ * 辅助函数：获取认证头
+ */
+function getAuthHeader(): Record<string, string> {
+  const userStr = localStorage.getItem("user");
+  if (!userStr) return {};
+  try {
+    const user = JSON.parse(userStr);
+    return { Authorization: `Bearer ${user.token}` };
+  } catch (e) {
+    return {};
+  }
+}
+
+/**
  * 远端 API 实现
  */
 export const apiStorageDriver: StorageDriver = {
   async saveHistory(history) {
     const response = await fetch(`${API_BASE}/schedule/history`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeader(),
+      },
       body: JSON.stringify({ history }),
     });
     if (!response.ok) throw new Error("Failed to save history to server");
@@ -48,7 +65,16 @@ export const apiStorageDriver: StorageDriver = {
 
   async loadHistory() {
     try {
-      const response = await fetch(`${API_BASE}/schedule/history`);
+      const response = await fetch(`${API_BASE}/schedule/history`, {
+        headers: getAuthHeader(),
+      });
+      if (response.status === 401) {
+        localStorage.removeItem("user");
+        if (!window.location.pathname.endsWith("/login")) {
+          window.location.href = "/time/login";
+        }
+        return {};
+      }
       const result = await response.json();
       return result.data || {};
     } catch (error) {
@@ -60,7 +86,10 @@ export const apiStorageDriver: StorageDriver = {
   async saveCustomTags(tags) {
     const response = await fetch(`${API_BASE}/schedule/tags`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeader(),
+      },
       body: JSON.stringify({ tags }),
     });
     if (!response.ok) throw new Error("Failed to save tags to server");
@@ -68,7 +97,16 @@ export const apiStorageDriver: StorageDriver = {
 
   async loadCustomTags() {
     try {
-      const response = await fetch(`${API_BASE}/schedule/tags`);
+      const response = await fetch(`${API_BASE}/schedule/tags`, {
+        headers: getAuthHeader(),
+      });
+      if (response.status === 401) {
+        localStorage.removeItem("user");
+        if (!window.location.pathname.endsWith("/login")) {
+          window.location.href = "/time/login";
+        }
+        return null;
+      }
       const result = await response.json();
       return result.tags || null;
     } catch (error) {

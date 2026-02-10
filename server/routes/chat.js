@@ -3,8 +3,21 @@ const { openai, DEFAULT_MODEL } = require("../openai");
 
 const router = new Router();
 
+/**
+ * 中间件：验证用户身份
+ */
+async function authMiddleware(ctx, next) {
+  const authHeader = ctx.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    ctx.status = 401;
+    ctx.body = { success: false, message: "未登录" };
+    return;
+  }
+  await next();
+}
+
 // OpenAI 聊天接口
-router.post("/chat", async (ctx) => {
+router.post("/chat", authMiddleware, async (ctx) => {
   const { messages, model } = ctx.request.body;
 
   if (!Array.isArray(messages)) {

@@ -51,6 +51,12 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // 初始化加载数据
   useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      setIsLoaded(true);
+      return;
+    }
+
     const initData = async () => {
       try {
         const [savedHistory, savedTags] = await Promise.all([
@@ -82,7 +88,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // 数据持久化
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !localStorage.getItem("user")) return;
 
     // 跳过加载后的第一次自动保存，只有当 history 真正改变时才保存
     if (isFirstRender.current) {
@@ -98,7 +104,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [history, isLoaded]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !localStorage.getItem("user")) return;
 
     // 标签也添加同样的逻辑
     storage.saveCustomTags(customTags);

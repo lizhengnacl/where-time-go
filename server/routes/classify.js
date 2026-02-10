@@ -5,11 +5,24 @@ const { CLASSIFY_PROMPT } = require("../prompts");
 const router = new Router();
 
 /**
+ * 中间件：验证用户身份
+ */
+async function authMiddleware(ctx, next) {
+  const authHeader = ctx.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    ctx.status = 401;
+    ctx.body = { success: false, message: "未登录" };
+    return;
+  }
+  await next();
+}
+
+/**
  * 类型识别接口
  * POST /api/classify
  * Body: { text: "事项描述" }
  */
-router.post("/api/classify", async (ctx) => {
+router.post("/api/classify", authMiddleware, async (ctx) => {
   const { text, excludeTags = [] } = ctx.request.body;
 
   if (!text) {

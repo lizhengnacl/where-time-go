@@ -3,14 +3,23 @@ const fs = require("fs").promises;
 const path = require("path");
 
 const router = new Router({ prefix: "/api/schedule" });
-const DATA_FILE = path.join(__dirname, "../data.json");
+const DATA_DIR = path.join(__dirname, "../data");
+
+/**
+ * 获取用户的据文件路径
+ */
+function getUserDataFile(userId) {
+  return path.join(DATA_DIR, `user_${userId}.json`);
+}
 
 /**
  * 辅助函数：读取本地数据文件
  */
-async function readData() {
+async function readData(userId) {
+  if (!userId) return { history: {}, tags: null };
+  const dataFile = getUserDataFile(userId);
   try {
-    const content = await fs.readFile(DATA_FILE, "utf-8");
+    const content = await fs.readFile(dataFile, "utf-8");
     return JSON.parse(content);
   } catch (error) {
     // 如果文件不存在，返回初始数据
@@ -21,16 +30,34 @@ async function readData() {
 /**
  * 辅助函数：写入本地数据文件
  */
-async function writeData(data) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
+async function writeData(userId, data) {
+  if (!userId) return;
+  const dataFile = getUserDataFile(userId);
+  await fs.writeFile(dataFile, JSON.stringify(data, null, 2), "utf-8");
+}
+
+/**
+ * 中间件：验证用户身份
+ */
+async function authMiddleware(ctx, next) {
+  const authHeader = ctx.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    ctx.status = 401;
+    ctx.body = { success: false, message: "未登录" };
+    return;
+  }
+  const token = authHeader.split(" ")[1];
+  // 简单起见，token 就是 userId
+  ctx.state.userId = token;
+  await next();
 }
 
 /**
  * 获取历史记录
  * GET /api/schedule/history
  */
-router.get("/history", async (ctx) => {
-  const data = await readData();
+router.get("/history", authMiddleware, async (ctx) => {
+  const data = await readData(ctx.state.userId);
   ctx.body = {
     success: true,
     data: data.history || {},
@@ -41,11 +68,11 @@ router.get("/history", async (ctx) => {
  * 保存历史记录
  * POST /api/schedule/history
  */
-router.post("/history", async (ctx) => {
+router.post("/history", authMiddleware, async (ctx) => {
   const { history } = ctx.request.body;
-  const data = await readData();
+  const data = await readData(ctx.state.userId);
   data.history = history;
-  await writeData(data);
+  await writeData(ctx.state.userId, data);
   ctx.body = { success: true };
 });
 
@@ -53,8 +80,8 @@ router.post("/history", async (ctx) => {
  * 获取自定义标签
  * GET /api/schedule/tags
  */
-router.get("/tags", async (ctx) => {
-  const data = await readData();
+router.get("/tags", authMiddleware, async (ctx) => {
+  const data = await readData(ctx.state.userId);
   ctx.body = {
     success: true,
     tags: data.tags,
@@ -65,11 +92,11 @@ router.get("/tags", async (ctx) => {
  * 保存自定义标签
  * POST /api/schedule/tags
  */
-router.post("/tags", async (ctx) => {
+router.post("/tags", authMiddleware, async (ctx) => {
   const { tags } = ctx.request.body;
-  const data = await readData();
+  const data = await readData(ctx.state.userId);
   data.tags = tags;
-  await writeData(data);
+  await writeData(ctx.state.userId, data);
   ctx.body = { success: true };
 });
 
