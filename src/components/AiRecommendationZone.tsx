@@ -1,7 +1,8 @@
 import React from "react";
-import { Sparkles, RotateCw, Check } from "lucide-react";
+import { Sparkles, RotateCw, Check, LogIn } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tag } from "../context/ScheduleContext";
+import { useNavigate } from "react-router-dom";
 
 interface AiRecommendationZoneProps {
   isAiLoading: boolean;
@@ -22,6 +23,9 @@ export const AiRecommendationZone: React.FC<AiRecommendationZoneProps> = ({
   onTagToggle,
   onAddCustomTag,
 }) => {
+  const navigate = useNavigate();
+  const isGuest = !localStorage.getItem("user");
+
   if (!isAiLoading && aiRecommendedTags.length === 0 && !localContent.trim()) {
     return null;
   }
@@ -43,6 +47,18 @@ export const AiRecommendationZone: React.FC<AiRecommendationZoneProps> = ({
                 <RotateCw className="w-3 h-3 animate-spin" />
                 AI 思考中...
               </div>
+            ) : isGuest ? (
+              <button
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/login");
+                }}
+                className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px] font-bold hover:bg-amber-500/20 transition-colors"
+              >
+                <LogIn className="w-3 h-3" />
+                登录/注册以解锁 AI 语义标签建议
+              </button>
             ) : aiRecommendedTags.length > 0 ? (
               <>
                 <button
