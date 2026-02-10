@@ -69,10 +69,7 @@ export const apiStorageDriver: StorageDriver = {
         headers: getAuthHeader(),
       });
       if (response.status === 401) {
-        localStorage.removeItem("user");
-        if (!window.location.pathname.endsWith("/login")) {
-          window.location.href = "/time/login";
-        }
+        // 游客态不自动重定向
         return {};
       }
       const result = await response.json();
@@ -101,10 +98,7 @@ export const apiStorageDriver: StorageDriver = {
         headers: getAuthHeader(),
       });
       if (response.status === 401) {
-        localStorage.removeItem("user");
-        if (!window.location.pathname.endsWith("/login")) {
-          window.location.href = "/time/login";
-        }
+        // 游客态不自动重定向
         return null;
       }
       const result = await response.json();
@@ -116,6 +110,35 @@ export const apiStorageDriver: StorageDriver = {
   },
 };
 
-// 当前使用的存储驱动（切换为 apiStorageDriver 即可连接后端）
-// export const storage = localStorageDriver;
-export const storage = apiStorageDriver;
+/**
+ * 混合存储实现：根据登录状态切换
+ */
+export const hybridStorageDriver: StorageDriver = {
+  async saveHistory(history) {
+    if (localStorage.getItem("user")) {
+      return apiStorageDriver.saveHistory(history);
+    }
+    return localStorageDriver.saveHistory(history);
+  },
+  async loadHistory() {
+    if (localStorage.getItem("user")) {
+      return apiStorageDriver.loadHistory();
+    }
+    return localStorageDriver.loadHistory();
+  },
+  async saveCustomTags(tags) {
+    if (localStorage.getItem("user")) {
+      return apiStorageDriver.saveCustomTags(tags);
+    }
+    return localStorageDriver.saveCustomTags(tags);
+  },
+  async loadCustomTags() {
+    if (localStorage.getItem("user")) {
+      return apiStorageDriver.loadCustomTags();
+    }
+    return localStorageDriver.loadCustomTags();
+  },
+};
+
+// 当前使用的存储驱动
+export const storage = hybridStorageDriver;

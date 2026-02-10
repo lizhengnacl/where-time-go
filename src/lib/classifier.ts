@@ -108,6 +108,25 @@ export const apiClassifierDriver: ClassifierDriver = {
   },
 };
 
+/**
+ * 混合分类驱动
+ */
+export const hybridClassifierDriver: ClassifierDriver = {
+  async getRecommendations(text, currentTags, excludeTags = []) {
+    if (localStorage.getItem("user")) {
+      return apiClassifierDriver.getRecommendations(
+        text,
+        currentTags,
+        excludeTags,
+      );
+    }
+    return localClassifierDriver.getRecommendations(
+      text,
+      currentTags,
+      excludeTags,
+    );
+  },
+};
+
 // 当前使用的分类器驱动
-// export const classifier = localClassifierDriver;
-export const classifier = apiClassifierDriver;
+export const classifier = hybridClassifierDriver;
