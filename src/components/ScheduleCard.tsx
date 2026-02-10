@@ -3,14 +3,39 @@
  */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { ScheduleItem, Tag, useSchedule } from "../context/ScheduleContext";
-import { Plus, Check, X, Sparkles, PlusCircle, RotateCw } from "lucide-react";
+import {
+  Plus,
+  Check,
+  X,
+  Sparkles,
+  PlusCircle,
+  RotateCw,
+  Copy,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { classifier } from "../lib/classifier";
 
-export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
-  const { updateItem, customTags, addCustomTag, currentDate } = useSchedule();
+export const ScheduleCard: React.FC<{
+  item: ScheduleItem;
+  isMergedTop?: boolean;
+  isMergedBottom?: boolean;
+}> = ({ item, isMergedTop, isMergedBottom }) => {
+  const {
+    updateItem,
+    batchUpdateItems,
+    items,
+    customTags,
+    addCustomTag,
+    currentDate,
+  } = useSchedule();
   const [isEditing, setIsEditing] = useState(false);
   const [localContent, setLocalContent] = useState(item.content);
+
+  // 当外部 item.content 更新时，同步 localContent
+  useEffect(() => {
+    setLocalContent(item.content);
+  }, [item.content]);
+
   const [newTagInput, setNewTagInput] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [aiRecommendedTags, setAiRecommendedTags] = useState<Tag[]>([]);
@@ -26,6 +51,9 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
     return currentDate === todayStr;
   }, [currentDate]);
   const isCurrentHour = isToday && item.hour === new Date().getHours();
+
+  // 判断是否可以向下填充（当前有内容且下一个时段没内容，或者单纯为了快捷复制）
+  const canFillDown = item.content.trim() !== "" && item.hour < 23;
 
   // AI 推荐标签逻辑
   const fetchRecommendations = async (isRetry = false) => {
@@ -71,14 +99,24 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
     setIsAddingTag(false);
   };
 
-  const handleContainerBlur = (e: React.FocusEvent) => {
-    const currentTarget = e.currentTarget;
-    // 使用 requestAnimationFrame 或 setTimeout 确保 document.activeElement 已更新
-    setTimeout(() => {
-      if (!currentTarget.contains(document.activeElement)) {
-        handleSave();
-      }
-    }, 150);
+  const handleCancel = () => {
+    setLocalContent(item.content); // 恢复原始内容
+    setIsEditing(false);
+    setIsAddingTag(false);
+  };
+
+  const handleApplyToNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const nextHour = item.hour + 1;
+    if (nextHour >= 24) return;
+
+    // 找到下一个时段
+    const nextItem = items.find((i) => i.hour === nextHour);
+    if (!nextItem) return;
+
+    // 批量更新当前及之后连续的空白时段，或者只更新下一个
+    // 这里采用更直观的方案：点击一次，向下覆盖一个时段
+    updateItem(nextHour, item.content, [...item.tags]);
   };
 
   const toggleTag = (tag: Tag) => {
@@ -115,23 +153,73 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
       {/* 内容卡片 */}
       <div
         ref={containerRef}
-        className={`group transition-all duration-300 rounded-2xl p-4 
+        className={`group transition-all duration-300 p-4 relative
+          ${isMergedTop ? "rounded-t-none border-t border-dashed border-muted-foreground/10" : "rounded-t-2xl pt-4"}
+          ${isMergedBottom ? "rounded-b-none" : "rounded-b-2xl"}
           ${isCurrentHour ? "ring-2 ring-primary/30 shadow-md bg-background animate-pulse-subtle" : ""}
-          ${isEditing ? "bg-secondary/80 ring-1 ring-primary/20" : isCurrentHour ? "" : "bg-secondary/30 hover:bg-secondary/50"}`}
+          ${isEditing ? "bg-secondary/80 ring-1 ring-primary/20 z-30" : isCurrentHour ? "" : "bg-secondary/30 hover:bg-secondary/50"}`}
         onClick={() => !isEditing && setIsEditing(true)}
-        onBlur={isEditing ? handleContainerBlur : undefined}
       >
+        {/* 向下填充按钮 - 更加隐蔽，仅在非编辑模式、有内容且鼠标悬停在特定区域时显示 */}
+        {!isEditing && canFillDown && (
+          <button
+            onClick={handleApplyToNext}
+            className="absolute -bottom-2.5 right-4 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-background/80 backdrop-blur-sm text-muted-foreground p-1 rounded-md border border-muted-foreground/20 shadow-sm hover:text-primary hover:border-primary/30 hover:bg-background active:scale-95 flex items-center gap-1"
+            title="向下填充一个时段"
+          >
+            <Copy className="w-3 h-3 rotate-90" />
+            <span className="text-[9px] font-medium pr-0.5">延续</span>
+          </button>
+        )}
+
         {isEditing ? (
           <div className="space-y-3">
-            <input
-              ref={inputRef}
-              autoFocus
-              className="w-full bg-background border-none rounded-full px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none"
-              value={localContent}
-              onChange={(e) => setLocalContent(e.target.value)}
-              placeholder="记录这段时间..."
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
-            />
+            <div className="flex gap-2 items-center">
+              <input
+                ref={inputRef}
+                autoFocus
+                className="flex-1 bg-background border-none rounded-full px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none"
+                value={localContent}
+                onChange={(e) => setLocalContent(e.target.value)}
+                placeholder="记录这段时间..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Escape") handleCancel();
+                }}
+              />
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSave();
+                  }}
+                  className="p-2 rounded-full bg-primary text-white shadow-sm hover:bg-primary/90 transition-colors"
+                  title="保存"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCancel();
+                  }}
+                  className="p-2 rounded-full bg-background text-muted-foreground border border-muted-foreground/20 hover:bg-muted/50 transition-colors"
+                  title="取消"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                {/* 延续按钮：移动到编辑工具栏末尾，更加内敛 */}
+                {canFillDown && (
+                  <button
+                    onClick={handleApplyToNext}
+                    className="p-2 rounded-full bg-background text-muted-foreground border border-muted-foreground/20 hover:text-primary hover:border-primary/30 transition-colors"
+                    title="延续到下一段"
+                  >
+                    <Copy className="w-4 h-4 rotate-90" />
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-1.5 pt-1 min-h-[32px] items-center">
               {/* AI 推荐显示区域 - 保持布局稳定 */}
               <AnimatePresence mode="popLayout">

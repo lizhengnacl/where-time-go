@@ -24,10 +24,6 @@ export default defineConfig({
     port: 3000,
     historyApiFallback: {
       index: '/time/index.html',
-      rewrites: [
-        { from: /^\/time\/sw\.js$/, to: '/sw.js' },
-        { from: /^\/time\/manifest\.json$/, to: '/manifest.json' },
-      ],
     },
     proxy: {
       "/time/api": "http://localhost:3001",

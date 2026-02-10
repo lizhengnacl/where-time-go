@@ -20,6 +20,9 @@ interface ScheduleContextType {
   customTags: Tag[];
   setCurrentDate: (date: string) => void;
   updateItem: (hour: number, content: string, tags: Tag[]) => void;
+  batchUpdateItems: (
+    updates: { hour: number; content: string; tags: Tag[] }[],
+  ) => void;
   addCustomTag: (tag: Tag) => void;
   stats: Record<Tag, number>;
   getHistoryDates: () => string[];
@@ -126,6 +129,31 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
+  const batchUpdateItems = (
+    updates: { hour: number; content: string; tags: Tag[] }[],
+  ) => {
+    setHistory((prev) => {
+      const dayItems =
+        prev[currentDate] ||
+        Array.from({ length: 24 }, (_, i) => ({
+          id: `hour-${currentDate}-${i}`,
+          hour: i,
+          content: "",
+          tags: [],
+        }));
+
+      const updateMap = new Map(updates.map((u) => [u.hour, u]));
+      const newDayItems = dayItems.map((item) => {
+        const update = updateMap.get(item.hour);
+        return update
+          ? { ...item, content: update.content, tags: update.tags }
+          : item;
+      });
+
+      return { ...prev, [currentDate]: newDayItems };
+    });
+  };
+
   const stats = items.reduce(
     (acc, item) => {
       item.tags.forEach((tag) => {
@@ -157,6 +185,7 @@ export const ScheduleProvider: React.FC<{ children: React.ReactNode }> = ({
         customTags,
         setCurrentDate,
         updateItem,
+        batchUpdateItems,
         addCustomTag,
         stats,
         getHistoryDates,
