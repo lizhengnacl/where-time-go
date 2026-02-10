@@ -93,11 +93,7 @@ export const ScheduleCard: React.FC<{
       setRejectedTags([]); // 退出编辑或内容为空时重置
       return;
     }
-
-    // 调整防抖时间至 500ms，在灵敏度与请求频率之间取得平衡
-    const timer = setTimeout(() => fetchRecommendations(false), 500);
-    return () => clearTimeout(timer);
-  }, [localContent, item.tags, isEditing]);
+  }, [localContent, isEditing]);
 
   const formatHour = (h: number) => `${h.toString().padStart(2, "0")}:00`;
 
@@ -205,11 +201,11 @@ export const ScheduleCard: React.FC<{
               }}
             />
 
-            {/* AI 推荐区 - 独立行，视觉区分 */}
+            {/* AI 推荐区 - 仅在有内容时且未加载推荐时显示手动触发按钮，或显示已获取的推荐 */}
             <AnimatePresence mode="popLayout">
               {(isAiLoading ||
                 aiRecommendedTags.length > 0 ||
-                (localContent.trim() && aiRecommendedTags.length === 0)) && (
+                localContent.trim()) && (
                 <motion.div
                   key="ai-section"
                   initial={{ opacity: 0, y: -10 }}
@@ -236,7 +232,7 @@ export const ScheduleCard: React.FC<{
                             className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold hover:bg-amber-500/30 transition-colors group"
                             title="重试推荐"
                           >
-                            推荐
+                            重试
                             <RotateCw className="w-2.5 h-2.5 ml-0.5 opacity-60 group-hover:opacity-100 transition-opacity" />
                           </button>
                           {aiRecommendedTags.map((tag) => {
@@ -267,18 +263,17 @@ export const ScheduleCard: React.FC<{
                           })}
                         </>
                       ) : (
-                        localContent.trim() && (
-                          <button
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              fetchRecommendations();
-                            }}
-                            className="text-[10px] text-amber-600/70 dark:text-amber-500/70 hover:text-amber-600 dark:hover:text-amber-500 transition-colors"
-                          >
-                            点击获取 AI 建议
-                          </button>
-                        )
+                        <button
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fetchRecommendations();
+                          }}
+                          className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 text-[10px] font-bold hover:bg-amber-500/20 transition-colors"
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          点击获取 AI 标签建议
+                        </button>
                       )}
                     </div>
                   </div>
