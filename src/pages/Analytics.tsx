@@ -56,7 +56,12 @@ type DrillDownFilter =
 type Period = "today" | "7d" | "30d" | "all" | "custom";
 
 export const Analytics: React.FC = () => {
-  const { history, setCurrentDate } = useSchedule();
+  const {
+    history,
+    items: currentItems,
+    currentDate: currentContextDate,
+    setCurrentDate,
+  } = useSchedule();
   const navigate = useNavigate();
   const [drillDown, setDrillDown] = useState<DrillDownFilter | null>(null);
   const [period, setPeriod] = useState<Period>("today");
@@ -70,6 +75,16 @@ export const Analytics: React.FC = () => {
 
   const todayStr = useMemo(() => formatDate(new Date()), []);
 
+  // 统一数据源：合并历史数据和当前内存中的实时数据
+  const fullHistory = useMemo(() => {
+    const combined = { ...history };
+    // 只有当上下文日期是今天时，才用内存中的 currentItems 覆盖历史，保证实时性
+    if (currentContextDate === todayStr) {
+      combined[todayStr] = currentItems;
+    }
+    return combined;
+  }, [history, currentItems, currentContextDate, todayStr]);
+
   const [customRange, setCustomRange] = useState({
     start: formatDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)),
     end: todayStr,
@@ -77,7 +92,9 @@ export const Analytics: React.FC = () => {
   const detailRef = useRef<HTMLDivElement>(null);
 
   const targetDates = useMemo(() => {
-    const allDates = Object.keys(history).sort((a, b) => b.localeCompare(a));
+    const allDates = Object.keys(fullHistory).sort((a, b) =>
+      b.localeCompare(a),
+    );
     // 确保 history 中即使没有今天的 key，也能在选择 today 时包含它
     const datesWithToday = allDates.includes(todayStr)
       ? allDates
@@ -92,7 +109,7 @@ export const Analytics: React.FC = () => {
       );
     }
     return datesWithToday;
-  }, [history, period, customRange, todayStr]);
+  }, [fullHistory, period, customRange, todayStr]);
 
   // 数据聚合：基于选择的时间段
   const analysisData = useMemo(() => {
@@ -101,17 +118,31 @@ export const Analytics: React.FC = () => {
     const hourDist = Array(24).fill(0);
 
     targetDates.forEach((date) => {
-      const dayItems = history[date] || [];
+      const dayItems = fullHistory[date] || [];
       let dayCount = 0;
       dayItems.forEach((item) => {
         if (item.content) {
           dayCount++;
+          // 统计所有标签的频次
           item.tags.forEach((tag) => {
             tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-            if (tag === "工作" || tag === "学习") {
-              hourDist[item.hour]++;
-            }
           });
+
+          // 黄金效率时段统计逻辑：
+          // 判定为“生产力”时段的标准：
+          // 1. 显式包含“工作”或“学习”标签
+          // 2. 或者包含用户自定义的标签（非“休息”、“其他”等系统默认非生产力标签）
+          const nonProductiveTags = ["休息", "其他"];
+          const isProductive = item.tags.some(
+            (tag) =>
+              tag === "工作" ||
+              tag === "学习" ||
+              !nonProductiveTags.includes(tag),
+          );
+
+          if (isProductive) {
+            hourDist[item.hour]++;
+          }
         }
       });
       dailyTrend.unshift({
@@ -125,11 +156,16 @@ export const Analytics: React.FC = () => {
       name,
       value,
     }));
-    const goldenHours = hourDist
+
+    // 优化黄金时段提取逻辑
+    const allProductiveHours = hourDist
       .map((count, hour) => ({ hour, count }))
-      .sort((a, b) => b.count - a.count)
       .filter((h) => h.count > 0)
-      .slice(0, 3);
+      .sort((a, b) => b.count - a.count || a.hour - b.hour);
+
+    // 提取黄金时段：严格保留频次最高的前 3 名（TOP3）
+    const goldenHours: { hour: number; count: number }[] =
+      allProductiveHours.slice(0, 3);
 
     return {
       pieData,
@@ -138,7 +174,7 @@ export const Analytics: React.FC = () => {
       totalRecords: dailyTrend.reduce((acc, curr) => acc + curr.count, 0),
       periodDays: targetDates.length,
     };
-  }, [history, targetDates]);
+  }, [fullHistory, targetDates, period]);
 
   // 根据筛选条件获取具体记录
   const filteredRecords = useMemo(() => {
@@ -146,7 +182,7 @@ export const Analytics: React.FC = () => {
 
     const records: { date: string; item: ScheduleItem }[] = [];
     targetDates.forEach((date) => {
-      const items = history[date] || [];
+      const items = fullHistory[date] || [];
       items.forEach((item) => {
         if (!item.content) return;
 
@@ -167,7 +203,7 @@ export const Analytics: React.FC = () => {
     return records.sort(
       (a, b) => b.date.localeCompare(a.date) || a.item.hour - b.item.hour,
     );
-  }, [history, drillDown, targetDates]);
+  }, [fullHistory, drillDown, targetDates]);
 
   const handleDrillDown = (filter: DrillDownFilter) => {
     setDrillDown(filter);
@@ -179,6 +215,31 @@ export const Analytics: React.FC = () => {
   const handleJumpToRecord = (date: string) => {
     setCurrentDate(date);
     navigate("/");
+  };
+
+  // 渲染饼图自定义标签
+  const renderCustomizedLabel = (props: any) => {
+    const { cx, cy, midAngle, innerRadius, outerRadius, percent, name } = props;
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 2.2;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    // 只有占比大于 2% 的才展示标签，避免太拥挤
+    if (percent < 0.02) return null;
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="currentColor"
+        className="text-[10px] font-medium opacity-80"
+        textAnchor={x > cx ? "start" : "end"}
+        dominantBaseline="central"
+      >
+        {`${name} ${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
   };
 
   return (
@@ -321,17 +382,19 @@ export const Analytics: React.FC = () => {
               </button>
             )}
           </div>
-          <div className="h-[240px] w-full bg-background rounded-3xl border border-border p-4 shadow-sm relative">
+          <div className="h-[280px] w-full bg-background rounded-3xl border border-border p-4 shadow-sm relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={analysisData.pieData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={70}
                   paddingAngle={5}
                   dataKey="value"
+                  label={renderCustomizedLabel}
+                  labelLine={false}
                   onClick={(data) => {
                     if (data && data.name) {
                       handleDrillDown({ type: "tag", value: data.name as Tag });
