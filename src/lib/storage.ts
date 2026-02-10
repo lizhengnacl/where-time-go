@@ -111,22 +111,54 @@ export const apiStorageDriver: StorageDriver = {
 };
 
 /**
- * 同步本地数据到云端
+ * 同步本地数据到云端（深度合并）
  */
 export async function syncLocalToCloud() {
   const localHistory = await localStorageDriver.loadHistory();
   const localTags = await localStorageDriver.loadCustomTags();
 
-  if (Object.keys(localHistory).length > 0) {
-    await apiStorageDriver.saveHistory(localHistory);
+  // 加载当前云端数据
+  const cloudHistory = await apiStorageDriver.loadHistory();
+  const cloudTags = await apiStorageDriver.loadCustomTags();
+
+  // 1. 合并历史记录
+  const mergedHistory = { ...cloudHistory };
+
+  Object.entries(localHistory).forEach(([date, localItems]) => {
+    if (!mergedHistory[date]) {
+      // 云端没有该日期，直接使用本地
+      mergedHistory[date] = localItems;
+    } else {
+      // 云端已有该日期，按小时合并：优先保留有内容的记录
+      const cloudItems = mergedHistory[date];
+      mergedHistory[date] = cloudItems.map((cItem, index) => {
+        const lItem = localItems[index];
+        // 如果本地有内容而云端没有，或者本地内容更长/更丰富，可以根据需求调整逻辑
+        // 这里简单采用：如果本地有内容，则覆盖云端（因为通常是游客刚记录完想同步）
+        if (lItem && lItem.content.trim()) {
+          return lItem;
+        }
+        return cItem;
+      });
+    }
+  });
+
+  // 2. 合并标签
+  const mergedTags = Array.from(
+    new Set([...(cloudTags || []), ...(localTags || [])]),
+  );
+
+  // 3. 保存合并后的数据到云端
+  if (Object.keys(mergedHistory).length > 0) {
+    await apiStorageDriver.saveHistory(mergedHistory);
   }
-  if (localTags && localTags.length > 0) {
-    await apiStorageDriver.saveCustomTags(localTags);
+  if (mergedTags.length > 0) {
+    await apiStorageDriver.saveCustomTags(mergedTags);
   }
 
-  // 同步完成后清除本地数据（可选，或者保留作为备份，这里选择保留但后续优先用云端）
-  // localStorage.removeItem("schedule_history");
-  // localStorage.removeItem("schedule_custom_tags");
+  // 同步成功后，清理本地数据以避免下次重复合并
+  localStorage.removeItem("schedule_history");
+  localStorage.removeItem("schedule_custom_tags");
 }
 
 /**
