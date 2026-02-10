@@ -5,7 +5,11 @@
 import { Tag } from "../context/ScheduleContext";
 
 export interface ClassifierDriver {
-  getRecommendations(text: string, currentTags: Tag[]): Promise<Tag[]>;
+  getRecommendations(
+    text: string,
+    currentTags: Tag[],
+    excludeTags?: Tag[],
+  ): Promise<Tag[]>;
 }
 
 // 本地推荐规则
@@ -23,7 +27,7 @@ const AI_KEYWORDS: Record<string, Tag[]> = {
  * 本地规则驱动
  */
 export const localClassifierDriver: ClassifierDriver = {
-  async getRecommendations(text, currentTags) {
+  async getRecommendations(text, currentTags, excludeTags = []) {
     if (!text) return [];
     const recommended = new Set<Tag>();
     Object.entries(AI_KEYWORDS).forEach(([pattern, tags]) => {
@@ -31,7 +35,7 @@ export const localClassifierDriver: ClassifierDriver = {
         tags.forEach((t) => recommended.add(t));
       }
     });
-    return Array.from(recommended).filter((t) => !currentTags.includes(t));
+    return Array.from(recommended).filter((t) => !excludeTags.includes(t));
   },
 };
 
@@ -41,18 +45,43 @@ const API_BASE = "/time/api";
  * 远端 AI 驱动 (预留)
  */
 export const apiClassifierDriver: ClassifierDriver = {
-  async getRecommendations(text, currentTags) {
+  async getRecommendations(text, currentTags, excludeTags = []) {
     try {
       const response = await fetch(`${API_BASE}/classify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, excludeTags }),
       });
       const result = await response.json();
-      if (result.category) {
-        // 假设返回单个分类，且不在当前标签中
-        const tag = result.category as Tag;
-        return currentTags.includes(tag) ? [] : [tag];
+
+      let rawCategories: string[] = [];
+      if (Array.isArray(result.categories)) {
+        rawCategories = result.categories;
+      } else if (typeof result.category === "string") {
+        rawCategories = [result.category];
+      }
+
+      if (rawCategories.length > 0) {
+        // 归一化处理以确保过滤准确
+        const normalize = (s: string) =>
+          s
+            .trim()
+            .toLowerCase()
+            .replace(/[。.！!]/g, "");
+        const normalizedCurrent = currentTags.map(normalize);
+        const normalizedExcluded = (excludeTags || []).map(normalize);
+
+        const filtered = rawCategories
+          .map((tag) => tag.trim())
+          .filter((tag) => {
+            const normalizedTag = normalize(tag);
+            return (
+              tag.length > 0 && !normalizedExcluded.includes(normalizedTag)
+            );
+          });
+
+        // 返回前 2 个最相关的推荐，增加展示机会
+        return filtered.slice(0, 2);
       }
       return [];
     } catch (error) {

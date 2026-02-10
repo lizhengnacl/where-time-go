@@ -3,7 +3,7 @@
  */
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { ScheduleItem, Tag, useSchedule } from "../context/ScheduleContext";
-import { Plus, Check, X, Sparkles, PlusCircle } from "lucide-react";
+import { Plus, Check, X, Sparkles, PlusCircle, RotateCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { classifier } from "../lib/classifier";
 
@@ -14,6 +14,8 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
   const [newTagInput, setNewTagInput] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [aiRecommendedTags, setAiRecommendedTags] = useState<Tag[]>([]);
+  const [rejectedTags, setRejectedTags] = useState<Tag[]>([]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -26,19 +28,38 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
   const isCurrentHour = isToday && item.hour === new Date().getHours();
 
   // AI 推荐标签逻辑
+  const fetchRecommendations = async (isRetry = false) => {
+    if (!localContent.trim()) return;
+
+    // 如果是重试，将当前显示的推荐标签加入“不满意”列表
+    let currentRejected = rejectedTags;
+    if (isRetry && aiRecommendedTags.length > 0) {
+      currentRejected = [...new Set([...rejectedTags, ...aiRecommendedTags])];
+      setRejectedTags(currentRejected);
+    }
+
+    setIsAiLoading(true);
+    try {
+      const tags = await classifier.getRecommendations(
+        localContent,
+        item.tags,
+        currentRejected,
+      );
+      setAiRecommendedTags(tags);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!isEditing || !localContent.trim()) {
       setAiRecommendedTags([]);
+      setRejectedTags([]); // 退出编辑或内容为空时重置
       return;
     }
 
-    const fetchRecommendations = async () => {
-      const tags = await classifier.getRecommendations(localContent, item.tags);
-      setAiRecommendedTags(tags);
-    };
-
-    // 增加防抖时间至 1000ms，确保用户基本输入完成后再触发推荐，减少请求频率
-    const timer = setTimeout(fetchRecommendations, 1000);
+    // 调整防抖时间至 500ms，在灵敏度与请求频率之间取得平衡
+    const timer = setTimeout(() => fetchRecommendations(false), 500);
     return () => clearTimeout(timer);
   }, [localContent, item.tags, isEditing]);
 
@@ -111,89 +132,150 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
               placeholder="记录这段时间..."
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {/* AI 推荐显示 */}
-              <AnimatePresence>
-                {aiRecommendedTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1 min-h-[32px] items-center">
+              {/* AI 推荐显示区域 - 保持布局稳定 */}
+              <AnimatePresence mode="popLayout">
+                {isAiLoading ? (
                   <motion.div
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    className="flex items-center gap-1.5 mr-2"
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-2 px-3 py-1 text-[10px] text-amber-600 dark:text-amber-500 shrink-0"
                   >
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 text-[10px] font-bold border border-amber-200/50 dark:border-amber-500/20">
+                    <RotateCw className="w-3 h-3 animate-spin" />
+                    AI 思考中...
+                  </motion.div>
+                ) : aiRecommendedTags.length > 0 ? (
+                  <motion.div
+                    key="recommendations"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center gap-1.5 mr-1 shrink-0"
+                  >
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fetchRecommendations(true);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 text-[10px] font-bold border border-amber-200/50 dark:border-amber-500/20 hover:bg-amber-500/20 transition-colors group"
+                      title="重试推荐"
+                    >
                       <Sparkles className="w-2.5 h-2.5" />
                       推荐
-                    </div>
-                    {aiRecommendedTags.map((tag) => (
-                      <button
-                        key={`ai-${tag}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addCustomTag(tag); // 选中推荐标签时，自动将其创建到自定义标签列表中
-                          toggleTag(tag);
-                        }}
-                        className="px-3 py-1 rounded-full text-[11px] bg-amber-500/5 text-amber-600 dark:text-amber-500/80 border border-amber-200/50 dark:border-amber-500/20 hover:bg-amber-500/10 transition-colors"
-                      >
-                        {tag}
-                      </button>
-                    ))}
+                      <RotateCw className="w-2.5 h-2.5 ml-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
+                    {aiRecommendedTags.map((tag) => {
+                      const isSelected = item.tags.includes(tag);
+                      return (
+                        <button
+                          key={`ai-${tag}`}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isSelected) {
+                              addCustomTag(tag);
+                              toggleTag(tag);
+                            }
+                          }}
+                          className={`px-3 py-1 rounded-full text-[11px] border transition-colors ${
+                            isSelected
+                              ? "bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30 cursor-default"
+                              : "bg-amber-500/5 text-amber-600 dark:text-amber-500/80 border-amber-200/50 dark:border-amber-500/20 hover:bg-amber-500/10"
+                          }`}
+                        >
+                          {isSelected && (
+                            <Check className="inline-block w-2.5 h-2.5 mr-1" />
+                          )}
+                          {tag}
+                        </button>
+                      );
+                    })}
                     <div className="w-[1px] h-4 bg-muted-foreground/20 mx-1" />
                   </motion.div>
+                ) : (
+                  localContent.trim() && (
+                    <motion.button
+                      key="manual-trigger"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fetchRecommendations();
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] text-amber-600/70 dark:text-amber-500/70 hover:text-amber-600 dark:hover:text-amber-500 transition-colors mr-1 shrink-0"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      点击获取 AI 建议
+                    </motion.button>
+                  )
                 )}
               </AnimatePresence>
 
-              {customTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleTag(tag);
-                  }}
-                  className={`px-3 py-1 rounded-full text-[11px] transition-all 
-                    ${
-                      item.tags.includes(tag)
-                        ? "bg-primary text-white shadow-sm"
-                        : "bg-background text-muted-foreground border border-muted-foreground/10 hover:bg-primary/5"
-                    }`}
-                >
-                  {tag}
-                </button>
-              ))}
-
-              {/* 添加自定义标签按钮 */}
-              {isAddingTag ? (
-                <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-300">
-                  <input
-                    autoFocus
-                    className="w-20 bg-background border border-primary/30 rounded-full px-2 py-0.5 text-[11px] outline-none"
-                    value={newTagInput}
-                    onChange={(e) => setNewTagInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddCustomTag();
-                      if (e.key === "Escape") setIsAddingTag(false);
-                    }}
-                    placeholder="标签名"
-                  />
+              {/* 其他标签也支持布局动画，防止跳变 */}
+              <motion.div
+                layout
+                className="flex flex-wrap gap-1.5 items-center"
+              >
+                {customTags.map((tag) => (
                   <button
-                    onClick={handleAddCustomTag}
-                    className="p-1 rounded-full bg-primary text-white"
+                    key={tag}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTag(tag);
+                    }}
+                    className={`px-3 py-1 rounded-full text-[11px] transition-all 
+                      ${
+                        item.tags.includes(tag)
+                          ? "bg-primary text-white shadow-sm"
+                          : "bg-background text-muted-foreground border border-muted-foreground/10 hover:bg-primary/5"
+                      }`}
                   >
-                    <Check className="w-3 h-3" />
+                    {tag}
                   </button>
-                </div>
-              ) : (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsAddingTag(true);
-                  }}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] bg-background text-muted-foreground border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:text-primary transition-all"
-                >
-                  <PlusCircle className="w-3 h-3" />
-                  新增
-                </button>
-              )}
+                ))}
+
+                {/* 添加自定义标签按钮 */}
+                {isAddingTag ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      autoFocus
+                      className="w-20 bg-background border border-primary/30 rounded-full px-2 py-0.5 text-[11px] outline-none"
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleAddCustomTag();
+                        if (e.key === "Escape") setIsAddingTag(false);
+                      }}
+                      placeholder="标签名"
+                    />
+                    <button
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={handleAddCustomTag}
+                      className="p-1 rounded-full bg-primary text-white"
+                    >
+                      <Check className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsAddingTag(true);
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] bg-background text-muted-foreground border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:text-primary transition-all"
+                  >
+                    <PlusCircle className="w-3 h-3" />
+                    新增
+                  </button>
+                )}
+              </motion.div>
             </div>
           </div>
         ) : (
