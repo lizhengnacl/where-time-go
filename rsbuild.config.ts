@@ -16,6 +16,21 @@ export default defineConfig({
     distPath: {
       root: "dist",
     },
+    // 启用多线程压缩
+    minify: true,
+  },
+  performance: {
+    // 分包策略优化
+    chunkSplit: {
+      strategy: "split-by-experience",
+      forceSplitting: {
+        // 将体积巨大的库强制拆分
+        "lib-recharts": /recharts/,
+        "lib-framer-motion": /framer-motion/,
+        "lib-nextui": /@nextui-org/,
+        "lib-lucide": /lucide-react/,
+      },
+    },
   },
   dev: {
     assetPrefix: "/time/",
@@ -23,7 +38,7 @@ export default defineConfig({
   server: {
     port: 3000,
     historyApiFallback: {
-      index: '/time/index.html',
+      index: "/time/index.html",
     },
     proxy: {
       "/time/api": "http://localhost:3001",
