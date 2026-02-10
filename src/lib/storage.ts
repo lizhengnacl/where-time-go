@@ -111,6 +111,25 @@ export const apiStorageDriver: StorageDriver = {
 };
 
 /**
+ * 同步本地数据到云端
+ */
+export async function syncLocalToCloud() {
+  const localHistory = await localStorageDriver.loadHistory();
+  const localTags = await localStorageDriver.loadCustomTags();
+
+  if (Object.keys(localHistory).length > 0) {
+    await apiStorageDriver.saveHistory(localHistory);
+  }
+  if (localTags && localTags.length > 0) {
+    await apiStorageDriver.saveCustomTags(localTags);
+  }
+
+  // 同步完成后清除本地数据（可选，或者保留作为备份，这里选择保留但后续优先用云端）
+  // localStorage.removeItem("schedule_history");
+  // localStorage.removeItem("schedule_custom_tags");
+}
+
+/**
  * 混合存储实现：根据登录状态切换
  */
 export const hybridStorageDriver: StorageDriver = {

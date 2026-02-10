@@ -22,6 +22,7 @@ import { AnalyticsCategoryChart } from "../components/AnalyticsCategoryChart";
 import { AnalyticsTrendChart } from "../components/AnalyticsTrendChart";
 import { AnalyticsGoldenHours } from "../components/AnalyticsGoldenHours";
 import { AnalyticsDrillDownList } from "../components/AnalyticsDrillDownList";
+import { Cloud, Info } from "lucide-react";
 
 const TAG_COLORS: Record<string, string> = {
   工作: "hsl(var(--primary))",
@@ -103,6 +104,8 @@ export const Analytics: React.FC = () => {
     }
     return datesWithToday;
   }, [fullHistory, period, customRange, todayStr]);
+
+  const isGuest = !localStorage.getItem("user");
 
   // 数据聚合：基于选择的时间段
   const analysisData = useMemo(() => {
@@ -249,6 +252,33 @@ export const Analytics: React.FC = () => {
       </div>
 
       <div className="p-6 space-y-8">
+        {/* 游客模式云同步提示 */}
+        {isGuest && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="p-4 bg-primary/5 border border-primary/10 rounded-3xl flex flex-col gap-3"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
+                <Cloud size={20} className="text-primary" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-bold">解锁云端同步与多端访问</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  当前数据仅存储在本设备。注册账号后，您的时间数据将获得永久云端备份，并可在任何设备上随时查看。
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+            >
+              立即注册并同步数据
+            </button>
+          </motion.div>
+        )}
+
         {/* 时间跨度选择器 */}
         <div className="space-y-4">
           <div className="flex p-1 bg-muted/30 rounded-2xl border border-border/50">

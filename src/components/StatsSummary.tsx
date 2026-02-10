@@ -14,6 +14,8 @@ import {
   Moon,
   LogOut,
   User,
+  Cloud,
+  CloudOff,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -41,6 +43,7 @@ export const StatsSummary: React.FC = () => {
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const isToday = currentDate === todayStr;
   const isHistoryPage = location.pathname === "/history";
+  const isLoggedIn = !!localStorage.getItem("user");
 
   const displayDate = new Date(currentDate).toLocaleDateString("zh-CN", {
     month: "numeric",
@@ -124,6 +127,16 @@ export const StatsSummary: React.FC = () => {
               <span className="text-[10px] font-medium text-primary">
                 {recordedCount}/24
               </span>
+              <div
+                className="flex items-center ml-1"
+                title={isLoggedIn ? "云端同步中" : "仅本地存储"}
+              >
+                {isLoggedIn ? (
+                  <Cloud size={10} className="text-green-500" />
+                ) : (
+                  <CloudOff size={10} className="text-amber-500" />
+                )}
+              </div>
             </div>
           </div>
         </div>

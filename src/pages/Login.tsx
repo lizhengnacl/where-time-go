@@ -1,6 +1,15 @@
 import React, { useState } from "react";
-import { Card, CardBody, CardHeader, Input, Button, Tabs, Tab } from "@nextui-org/react";
+import {
+  Card,
+  CardBody,
+  CardHeader,
+  Input,
+  Button,
+  Tabs,
+  Tab,
+} from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
+import { syncLocalToCloud } from "../lib/storage";
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,7 +25,7 @@ export function Login() {
     setError("");
 
     const endpoint = isLogin ? "/time/api/auth/login" : "/time/api/auth/signup";
-    
+
     try {
       const response = await fetch(endpoint, {
         method: "POST",
@@ -28,6 +37,12 @@ export function Login() {
 
       if (result.success) {
         localStorage.setItem("user", JSON.stringify(result.data));
+        // 如果是新注册或者登录，尝试同步本地数据
+        try {
+          await syncLocalToCloud();
+        } catch (syncErr) {
+          console.error("Sync failed:", syncErr);
+        }
         window.location.href = "/time/"; // 强制刷新并跳转，确保 Context 重新加载数据
       } else {
         setError(result.message || "操作失败");
@@ -47,9 +62,9 @@ export function Login() {
           <p className="text-default-500">记录时光流转</p>
         </CardHeader>
         <CardBody>
-          <Tabs 
-            fullWidth 
-            size="md" 
+          <Tabs
+            fullWidth
+            size="md"
             selectedKey={isLogin ? "login" : "signup"}
             onSelectionChange={(key) => setIsLogin(key === "login")}
           >
@@ -74,12 +89,7 @@ export function Login() {
               required
             />
             {error && <p className="text-danger text-sm">{error}</p>}
-            <Button 
-              type="submit" 
-              color="primary" 
-              isLoading={loading}
-              fullWidth
-            >
+            <Button type="submit" color="primary" isLoading={loading} fullWidth>
               {isLogin ? "登录" : "注册"}
             </Button>
           </form>
