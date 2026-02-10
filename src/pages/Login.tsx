@@ -92,6 +92,16 @@ export function Login() {
             <Button type="submit" color="primary" isLoading={loading} fullWidth>
               {isLogin ? "登录" : "注册"}
             </Button>
+
+            <div className="flex items-center gap-4 my-2">
+              <div className="h-px bg-divider flex-1" />
+              <span className="text-tiny text-default-400">或者</span>
+              <div className="h-px bg-divider flex-1" />
+            </div>
+
+            <Button variant="bordered" fullWidth onPress={() => navigate("/")}>
+              以游客身份继续
+            </Button>
           </form>
         </CardBody>
       </Card>
