@@ -92,6 +92,11 @@ export const ScheduleCard: React.FC<{
   const formatHour = (h: number) => `${h.toString().padStart(2, "0")}:00`;
 
   const handleSave = () => {
+    // 如果内容没变，直接关闭
+    if (localContent === item.content) {
+      setIsEditing(false);
+      return;
+    }
     updateItem(item.hour, localContent, item.tags);
     setIsEditing(false);
     setIsAddingTag(false);
@@ -103,18 +108,16 @@ export const ScheduleCard: React.FC<{
     setIsAddingTag(false);
   };
 
-  const handleApplyToNext = (e: React.MouseEvent) => {
+  const handleApplyToNext = (e: React.MouseEvent, useLocalContent = false) => {
     e.stopPropagation();
     const nextHour = item.hour + 1;
     if (nextHour >= 24) return;
 
-    // 找到下一个时段
-    const nextItem = items.find((i) => i.hour === nextHour);
-    if (!nextItem) return;
+    // 如果在编辑模式下点击，使用当前正在输入的文字
+    const contentToCopy = useLocalContent ? localContent : item.content;
 
-    // 批量更新当前及之后连续的空白时段，或者只更新下一个
-    // 这里采用更直观的方案：点击一次，向下覆盖一个时段
-    updateItem(nextHour, item.content, [...item.tags]);
+    // 使用批量更新确保同步性，或者确保 updateItem 能正确处理
+    updateItem(nextHour, contentToCopy, [...item.tags]);
   };
 
   const toggleTag = (tag: Tag) => {
@@ -216,6 +219,27 @@ export const ScheduleCard: React.FC<{
 
                 {/* 操作按钮组 - 底部右侧，清晰独立 */}
                 <div className="flex items-center gap-2 shrink-0 self-end">
+                  {canFillDown && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // 1. 立即更新当前项
+                        updateItem(item.hour, localContent, item.tags);
+                        // 2. 立即更新下一项
+                        const nextHour = item.hour + 1;
+                        updateItem(nextHour, localContent, [...item.tags]);
+                        // 3. 退出编辑
+                        setIsEditing(false);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-secondary text-muted-foreground border border-muted-foreground/10 hover:bg-primary/10 hover:text-primary transition-all active:scale-90 text-sm font-medium"
+                      title="保存并延续到下一时段"
+                    >
+                      <Copy className="w-4 h-4 rotate-90" />
+                      延续
+                    </button>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -276,7 +300,7 @@ export const ScheduleCard: React.FC<{
         {/* 向下填充按钮 */}
         {!isEditing && canFillDown && (
           <button
-            onClick={handleApplyToNext}
+            onClick={(e) => handleApplyToNext(e, false)}
             className={`absolute right-4 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-background/80 backdrop-blur-sm text-muted-foreground p-1 rounded-md border border-muted-foreground/20 shadow-sm hover:text-primary hover:border-primary/30 hover:bg-background active:scale-95 flex items-center gap-1
               ${isMergedBottom ? "-bottom-2" : "bottom-2"}`}
             title="延续到下一段"
