@@ -53,13 +53,13 @@ type DrillDownFilter =
   | { type: "date"; value: string }
   | { type: "hour"; value: number };
 
-type Period = "7d" | "30d" | "all" | "custom";
+type Period = "today" | "7d" | "30d" | "all" | "custom";
 
 export const Analytics: React.FC = () => {
   const { history, setCurrentDate } = useSchedule();
   const navigate = useNavigate();
   const [drillDown, setDrillDown] = useState<DrillDownFilter | null>(null);
-  const [period, setPeriod] = useState<Period>("7d");
+  const [period, setPeriod] = useState<Period>("today");
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
@@ -68,23 +68,31 @@ export const Analytics: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
+  const todayStr = useMemo(() => formatDate(new Date()), []);
+
   const [customRange, setCustomRange] = useState({
     start: formatDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)),
-    end: formatDate(new Date()),
+    end: todayStr,
   });
   const detailRef = useRef<HTMLDivElement>(null);
 
   const targetDates = useMemo(() => {
     const allDates = Object.keys(history).sort((a, b) => b.localeCompare(a));
-    if (period === "7d") return allDates.slice(0, 7);
-    if (period === "30d") return allDates.slice(0, 30);
+    // 确保 history 中即使没有今天的 key，也能在选择 today 时包含它
+    const datesWithToday = allDates.includes(todayStr)
+      ? allDates
+      : [todayStr, ...allDates].sort((a, b) => b.localeCompare(a));
+
+    if (period === "today") return [todayStr];
+    if (period === "7d") return datesWithToday.slice(0, 7);
+    if (period === "30d") return datesWithToday.slice(0, 30);
     if (period === "custom") {
-      return allDates.filter(
+      return datesWithToday.filter(
         (date) => date >= customRange.start && date <= customRange.end,
       );
     }
-    return allDates;
-  }, [history, period, customRange]);
+    return datesWithToday;
+  }, [history, period, customRange, todayStr]);
 
   // 数据聚合：基于选择的时间段
   const analysisData = useMemo(() => {
@@ -191,6 +199,7 @@ export const Analytics: React.FC = () => {
         <div className="space-y-4">
           <div className="flex p-1 bg-muted/30 rounded-2xl border border-border/50">
             {[
+              { id: "today", label: "今天" },
               { id: "7d", label: "近7日" },
               { id: "30d", label: "近30日" },
               { id: "all", label: "全部" },
