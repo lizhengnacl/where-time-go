@@ -3,7 +3,16 @@
  */
 import React from "react";
 import { useSchedule, Tag } from "../context/ScheduleContext";
-import { PieChart, Clock, Calendar, History, BarChart2 } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
+import {
+  PieChart,
+  Clock,
+  Calendar,
+  History,
+  BarChart2,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const TAG_COLORS: Record<string, string> = {
@@ -20,6 +29,7 @@ const getTagColor = (tag: string) => {
 
 export const StatsSummary: React.FC = () => {
   const { stats, items, currentDate, setCurrentDate } = useSchedule();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const recordedCount = items.filter((i) => i.content).length;
@@ -49,7 +59,7 @@ export const StatsSummary: React.FC = () => {
               }}
               className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 isToday && !isHistoryPage
-                  ? "bg-white shadow-sm text-primary"
+                  ? "bg-background shadow-sm text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -59,7 +69,7 @@ export const StatsSummary: React.FC = () => {
               onClick={() => navigate("/history")}
               className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all ${
                 isHistoryPage || (!isToday && !isHistoryPage)
-                  ? "bg-white shadow-sm text-primary"
+                  ? "bg-background shadow-sm text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -101,10 +111,18 @@ export const StatsSummary: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-1.5">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+
           <button
             onClick={() => navigate("/analytics")}
-            className="p-1.5 bg-muted/50 hover:bg-primary/10 hover:text-primary rounded-lg transition-all"
+            className="p-2 rounded-xl bg-muted/50 text-muted-foreground hover:text-primary transition-colors"
             title="数据统计"
           >
             <BarChart2 size={18} />

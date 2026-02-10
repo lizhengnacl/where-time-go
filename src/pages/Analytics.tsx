@@ -2,23 +2,40 @@
  * 可视化分析页面
  * 基于记录数据提供多维度的时间分布分析与时间管理建议
  */
-import React, { useMemo, useState, useRef } from 'react';
-import { useSchedule, Tag, ScheduleItem } from '../context/ScheduleContext';
-import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, BarChart3, PieChart as PieIcon, Zap, Target, Coffee, Calendar, Clock, XCircle } from 'lucide-react';
-import { 
-  PieChart, Pie, Cell, ResponsiveContainer, 
-  BarChart, Bar, XAxis, YAxis, Tooltip, 
-  Cell as RechartsCell
-} from 'recharts';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useMemo, useState, useRef } from "react";
+import { useSchedule, Tag, ScheduleItem } from "../context/ScheduleContext";
+import { useNavigate } from "react-router-dom";
+import {
+  ChevronLeft,
+  BarChart3,
+  PieChart as PieIcon,
+  Zap,
+  Target,
+  Coffee,
+  Calendar,
+  Clock,
+  XCircle,
+} from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Cell as RechartsCell,
+} from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 
 const TAG_COLORS: Record<string, string> = {
-  '工作': 'hsl(var(--primary))',
-  '学习': 'hsl(270, 70%, 60%)',
-  '休息': 'hsl(142, 70%, 45%)',
-  '运动': 'hsl(24, 90%, 50%)',
-  '其他': 'hsl(215, 15%, 50%)',
+  工作: "hsl(var(--primary))",
+  学习: "hsl(270, 70%, 60%)",
+  休息: "hsl(142, 70%, 45%)",
+  运动: "hsl(24, 90%, 50%)",
+  其他: "hsl(215, 15%, 50%)",
 };
 
 const getTagColor = (tag: string) => {
@@ -31,19 +48,19 @@ const getTagColor = (tag: string) => {
   return `hsl(${Math.abs(hash) % 360}, 65%, 55%)`;
 };
 
-type DrillDownFilter = 
-  | { type: 'tag'; value: Tag }
-  | { type: 'date'; value: string }
-  | { type: 'hour'; value: number };
+type DrillDownFilter =
+  | { type: "tag"; value: Tag }
+  | { type: "date"; value: string }
+  | { type: "hour"; value: number };
 
-type Period = '7d' | '30d' | 'all' | 'custom';
+type Period = "7d" | "30d" | "all" | "custom";
 
 export const Analytics: React.FC = () => {
   const { history, setCurrentDate } = useSchedule();
   const navigate = useNavigate();
   const [drillDown, setDrillDown] = useState<DrillDownFilter | null>(null);
-  const [period, setPeriod] = useState<Period>('7d');
-  
+  const [period, setPeriod] = useState<Period>("7d");
+
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -51,18 +68,20 @@ export const Analytics: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  const [customRange, setCustomRange] = useState({ 
+  const [customRange, setCustomRange] = useState({
     start: formatDate(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)),
-    end: formatDate(new Date())
+    end: formatDate(new Date()),
   });
   const detailRef = useRef<HTMLDivElement>(null);
 
   const targetDates = useMemo(() => {
     const allDates = Object.keys(history).sort((a, b) => b.localeCompare(a));
-    if (period === '7d') return allDates.slice(0, 7);
-    if (period === '30d') return allDates.slice(0, 30);
-    if (period === 'custom') {
-      return allDates.filter(date => date >= customRange.start && date <= customRange.end);
+    if (period === "7d") return allDates.slice(0, 7);
+    if (period === "30d") return allDates.slice(0, 30);
+    if (period === "custom") {
+      return allDates.filter(
+        (date) => date >= customRange.start && date <= customRange.end,
+      );
     }
     return allDates;
   }, [history, period, customRange]);
@@ -70,60 +89,65 @@ export const Analytics: React.FC = () => {
   // 数据聚合：基于选择的时间段
   const analysisData = useMemo(() => {
     const tagCounts: Record<string, number> = {};
-    const dailyTrend: { date: string, fullDate: string, count: number }[] = [];
+    const dailyTrend: { date: string; fullDate: string; count: number }[] = [];
     const hourDist = Array(24).fill(0);
 
-    targetDates.forEach(date => {
+    targetDates.forEach((date) => {
       const dayItems = history[date] || [];
       let dayCount = 0;
-      dayItems.forEach(item => {
+      dayItems.forEach((item) => {
         if (item.content) {
           dayCount++;
-          item.tags.forEach(tag => {
+          item.tags.forEach((tag) => {
             tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-            if (tag === '工作' || tag === '学习') {
+            if (tag === "工作" || tag === "学习") {
               hourDist[item.hour]++;
             }
           });
         }
       });
-      dailyTrend.unshift({ 
-        date: date.split('-').slice(1).join('/'), 
+      dailyTrend.unshift({
+        date: date.split("-").slice(1).join("/"),
         fullDate: date,
-        count: dayCount 
+        count: dayCount,
       });
     });
 
-    const pieData = Object.entries(tagCounts).map(([name, value]) => ({ name, value }));
+    const pieData = Object.entries(tagCounts).map(([name, value]) => ({
+      name,
+      value,
+    }));
     const goldenHours = hourDist
       .map((count, hour) => ({ hour, count }))
       .sort((a, b) => b.count - a.count)
-      .filter(h => h.count > 0)
+      .filter((h) => h.count > 0)
       .slice(0, 3);
 
-    return { 
-      pieData, 
-      dailyTrend, 
-      goldenHours, 
+    return {
+      pieData,
+      dailyTrend,
+      goldenHours,
       totalRecords: dailyTrend.reduce((acc, curr) => acc + curr.count, 0),
-      periodDays: targetDates.length
+      periodDays: targetDates.length,
     };
   }, [history, targetDates]);
 
   // 根据筛选条件获取具体记录
   const filteredRecords = useMemo(() => {
     if (!drillDown) return [];
-    
+
     const records: { date: string; item: ScheduleItem }[] = [];
-    targetDates.forEach(date => {
+    targetDates.forEach((date) => {
       const items = history[date] || [];
-      items.forEach(item => {
+      items.forEach((item) => {
         if (!item.content) return;
 
         let match = false;
-        if (drillDown.type === 'tag' && item.tags.includes(drillDown.value)) match = true;
-        if (drillDown.type === 'date' && date === drillDown.value) match = true;
-        if (drillDown.type === 'hour' && item.hour === drillDown.value) match = true;
+        if (drillDown.type === "tag" && item.tags.includes(drillDown.value))
+          match = true;
+        if (drillDown.type === "date" && date === drillDown.value) match = true;
+        if (drillDown.type === "hour" && item.hour === drillDown.value)
+          match = true;
 
         if (match) {
           records.push({ date, item });
@@ -132,27 +156,29 @@ export const Analytics: React.FC = () => {
     });
 
     // 按日期倒序，同日期按小时升序
-    return records.sort((a, b) => b.date.localeCompare(a.date) || a.item.hour - b.item.hour);
+    return records.sort(
+      (a, b) => b.date.localeCompare(a.date) || a.item.hour - b.item.hour,
+    );
   }, [history, drillDown, targetDates]);
 
   const handleDrillDown = (filter: DrillDownFilter) => {
     setDrillDown(filter);
     setTimeout(() => {
-      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
   };
 
   const handleJumpToRecord = (date: string) => {
     setCurrentDate(date);
-    navigate('/');
+    navigate("/");
   };
 
   return (
     <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col pb-10">
       {/* Header */}
       <div className="glass-panel sticky top-0 z-20 px-6 py-4 flex items-center gap-4">
-        <button 
-          onClick={() => navigate('/')}
+        <button
+          onClick={() => navigate("/")}
           className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
         >
           <ChevronLeft size={24} />
@@ -165,18 +191,18 @@ export const Analytics: React.FC = () => {
         <div className="space-y-4">
           <div className="flex p-1 bg-muted/30 rounded-2xl border border-border/50">
             {[
-              { id: '7d', label: '近7日' },
-              { id: '30d', label: '近30日' },
-              { id: 'all', label: '全部' },
-              { id: 'custom', label: '自定义' }
+              { id: "7d", label: "近7日" },
+              { id: "30d", label: "近30日" },
+              { id: "all", label: "全部" },
+              { id: "custom", label: "自定义" },
             ].map((p) => (
               <button
                 key={p.id}
                 onClick={() => setPeriod(p.id as Period)}
                 className={`flex-1 py-2 text-xs font-medium rounded-xl transition-all ${
-                  period === p.id 
-                    ? 'bg-white text-primary shadow-sm' 
-                    : 'text-muted-foreground hover:text-foreground'
+                  period === p.id
+                    ? "bg-background text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {p.label}
@@ -185,30 +211,44 @@ export const Analytics: React.FC = () => {
           </div>
 
           <AnimatePresence>
-            {period === 'custom' && (
-              <motion.div 
+            {period === "custom" && (
+              <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
+                animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
                 <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-2xl border border-border/40">
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] text-muted-foreground ml-1">开始日期</label>
-                    <input 
-                      type="date" 
+                    <label className="text-[10px] text-muted-foreground ml-1">
+                      开始日期
+                    </label>
+                    <input
+                      type="date"
                       value={customRange.start}
-                      onChange={(e) => setCustomRange(prev => ({ ...prev, start: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomRange((prev) => ({
+                          ...prev,
+                          start: e.target.value,
+                        }))
+                      }
                       className="w-full bg-transparent text-sm font-medium focus:outline-none px-1"
                     />
                   </div>
                   <div className="h-8 w-px bg-border/50 self-end mb-1" />
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] text-muted-foreground ml-1">结束日期</label>
-                    <input 
-                      type="date" 
+                    <label className="text-[10px] text-muted-foreground ml-1">
+                      结束日期
+                    </label>
+                    <input
+                      type="date"
                       value={customRange.end}
-                      onChange={(e) => setCustomRange(prev => ({ ...prev, end: e.target.value }))}
+                      onChange={(e) =>
+                        setCustomRange((prev) => ({
+                          ...prev,
+                          end: e.target.value,
+                        }))
+                      }
                       className="w-full bg-transparent text-sm font-medium focus:outline-none px-1"
                     />
                   </div>
@@ -220,18 +260,26 @@ export const Analytics: React.FC = () => {
 
         {/* 核心摘要 */}
         <div className="grid grid-cols-2 gap-4">
-          <motion.div 
+          <motion.div
             key={`records-${period}-${customRange.start}-${customRange.end}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="p-4 rounded-3xl bg-primary/5 border border-primary/10 flex flex-col items-center justify-center text-center"
           >
             <span className="text-xs text-muted-foreground mb-1">
-              {period === 'all' ? '累计' : period === 'custom' ? '选定时段' : `近${analysisData.periodDays}日`}记录
+              {period === "all"
+                ? "累计"
+                : period === "custom"
+                  ? "选定时段"
+                  : `近${analysisData.periodDays}日`}
+              记录
             </span>
-            <div className="text-2xl font-bold text-primary">{analysisData.totalRecords}<span className="text-xs ml-1 font-normal opacity-70">条</span></div>
+            <div className="text-2xl font-bold text-primary">
+              {analysisData.totalRecords}
+              <span className="text-xs ml-1 font-normal opacity-70">条</span>
+            </div>
           </motion.div>
-          <motion.div 
+          <motion.div
             key={`days-${period}-${customRange.start}-${customRange.end}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -239,7 +287,10 @@ export const Analytics: React.FC = () => {
             className="p-4 rounded-3xl bg-secondary/5 border border-secondary/10 flex flex-col items-center justify-center text-center"
           >
             <span className="text-xs text-muted-foreground mb-1">分析天数</span>
-            <div className="text-2xl font-bold text-secondary">{analysisData.periodDays}<span className="text-xs ml-1 font-normal opacity-70">天</span></div>
+            <div className="text-2xl font-bold text-secondary">
+              {analysisData.periodDays}
+              <span className="text-xs ml-1 font-normal opacity-70">天</span>
+            </div>
           </motion.div>
         </div>
 
@@ -252,13 +303,16 @@ export const Analytics: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold">时间分配占比</h2>
             </div>
-            {drillDown?.type === 'tag' && (
-              <button onClick={() => setDrillDown(null)} className="text-xs text-primary flex items-center gap-1">
+            {drillDown?.type === "tag" && (
+              <button
+                onClick={() => setDrillDown(null)}
+                className="text-xs text-primary flex items-center gap-1"
+              >
                 清除筛选 <XCircle size={12} />
               </button>
             )}
           </div>
-          <div className="h-[240px] w-full bg-white rounded-3xl border border-border p-4 shadow-sm relative">
+          <div className="h-[240px] w-full bg-background rounded-3xl border border-border p-4 shadow-sm relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -271,29 +325,56 @@ export const Analytics: React.FC = () => {
                   dataKey="value"
                   onClick={(data) => {
                     if (data && data.name) {
-                      handleDrillDown({ type: 'tag', value: data.name as Tag });
+                      handleDrillDown({ type: "tag", value: data.name as Tag });
                     }
                   }}
                   className="cursor-pointer"
                 >
                   {analysisData.pieData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={getTagColor(entry.name)} 
-                      stroke={drillDown?.type === 'tag' && drillDown.value === entry.name ? 'hsl(var(--primary))' : 'none'}
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={getTagColor(entry.name)}
+                      stroke={
+                        drillDown?.type === "tag" &&
+                        drillDown.value === entry.name
+                          ? "hsl(var(--primary))"
+                          : "none"
+                      }
                       strokeWidth={2}
-                      style={{ outline: 'none' }}
-                      opacity={drillDown?.type === 'tag' && drillDown.value !== entry.name ? 0.3 : 1}
+                      style={{ outline: "none" }}
+                      opacity={
+                        drillDown?.type === "tag" &&
+                        drillDown.value !== entry.name
+                          ? 0.3
+                          : 1
+                      }
                     />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "12px",
+                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: "hsl(var(--background))",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                    padding: "8px 12px",
+                    fontSize: "12px",
+                    color: "hsl(var(--foreground))",
+                  }}
+                  itemStyle={{
+                    color: "hsl(var(--foreground))",
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
-                <div className="text-[10px] text-muted-foreground uppercase tracking-widest">分类占比</div>
-                <div className="text-xs font-bold text-primary mt-1">点击筛选</div>
+                <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
+                  分类占比
+                </div>
+                <div className="text-xs font-bold text-primary mt-1">
+                  点击筛选
+                </div>
               </div>
             </div>
           </div>
@@ -308,49 +389,86 @@ export const Analytics: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold">记录趋势</h2>
             </div>
-            {drillDown?.type === 'date' && (
-              <button onClick={() => setDrillDown(null)} className="text-xs text-primary flex items-center gap-1">
+            {drillDown?.type === "date" && (
+              <button
+                onClick={() => setDrillDown(null)}
+                className="text-xs text-primary flex items-center gap-1"
+              >
                 重置视图 <XCircle size={12} />
               </button>
             )}
           </div>
-          <div className={`w-full bg-white rounded-3xl border border-border p-4 shadow-sm ${
-            period === 'all' || period === 'custom' ? 'h-[240px] overflow-x-auto overflow-y-hidden' : 'h-[200px]'
-          }`}>
-            <div className={period === 'all' || period === 'custom' ? 'min-w-[600px] h-full' : 'w-full h-full'}>
+          <div
+            className={`w-full bg-background rounded-3xl border border-border p-4 shadow-sm ${
+              period === "all" || period === "custom"
+                ? "h-[240px] overflow-x-auto overflow-y-hidden"
+                : "h-[200px]"
+            }`}
+          >
+            <div
+              className={
+                period === "all" || period === "custom"
+                  ? "min-w-[600px] h-full"
+                  : "w-full h-full"
+              }
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analysisData.dailyTrend}>
-                  <XAxis 
-                    dataKey="date" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    style={{ fontSize: '10px' }} 
-                    interval={period === 'all' || period === 'custom' ? Math.max(0, Math.floor(analysisData.dailyTrend.length / 8)) : 0}
+                  <XAxis
+                    dataKey="date"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "hsl(var(--muted-foreground))" }}
+                    style={{ fontSize: "10px" }}
+                    interval={
+                      period === "all" || period === "custom"
+                        ? Math.max(
+                            0,
+                            Math.floor(analysisData.dailyTrend.length / 8),
+                          )
+                        : 0
+                    }
                   />
                   <YAxis hide />
-                  <Tooltip 
-                    cursor={{ fill: '#f3f4f6' }} 
-                    labelStyle={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', padding: '8px 12px' }} 
-                    formatter={(value: number) => [`${value} 条`, '当日记录']}
+                  <Tooltip
+                    cursor={{ fill: "hsl(var(--muted) / 0.2)" }}
+                    labelStyle={{
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                      marginBottom: "4px",
+                      color: "hsl(var(--foreground))",
+                    }}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "1px solid hsl(var(--border))",
+                      backgroundColor: "hsl(var(--background))",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      padding: "8px 12px",
+                    }}
+                    formatter={(value: number) => [`${value} 条`, "当日记录"]}
                   />
-                  <Bar 
-                    dataKey="count" 
+                  <Bar
+                    dataKey="count"
                     name="记录数"
-                    fill="hsl(var(--primary))" 
-                    radius={[4, 4, 0, 0]} 
-                    barSize={period === 'all' || period === 'custom' ? 12 : 20} 
+                    fill="hsl(var(--primary))"
+                    radius={[4, 4, 0, 0]}
+                    barSize={period === "all" || period === "custom" ? 12 : 20}
                     onClick={(data) => {
                       if (data && data.fullDate) {
-                        handleDrillDown({ type: 'date', value: data.fullDate });
+                        handleDrillDown({ type: "date", value: data.fullDate });
                       }
                     }}
                     className="cursor-pointer"
                   >
                     {analysisData.dailyTrend.map((entry, index) => (
-                      <RechartsCell 
-                        key={`cell-${index}`} 
-                        opacity={drillDown?.type === 'date' && drillDown.value !== entry.fullDate ? 0.3 : 1}
+                      <RechartsCell
+                        key={`cell-${index}`}
+                        opacity={
+                          drillDown?.type === "date" &&
+                          drillDown.value !== entry.fullDate
+                            ? 0.3
+                            : 1
+                        }
                       />
                     ))}
                   </Bar>
@@ -369,30 +487,39 @@ export const Analytics: React.FC = () => {
               </div>
               <h2 className="text-lg font-bold">黄金效率时段</h2>
             </div>
-            {drillDown?.type === 'hour' && (
-              <button onClick={() => setDrillDown(null)} className="text-xs text-primary flex items-center gap-1">
+            {drillDown?.type === "hour" && (
+              <button
+                onClick={() => setDrillDown(null)}
+                className="text-xs text-primary flex items-center gap-1"
+              >
                 清除筛选 <XCircle size={12} />
               </button>
             )}
           </div>
           <div className="grid gap-3">
             {analysisData.goldenHours.map((gh, idx) => (
-              <motion.button 
-                key={gh.hour} 
+              <motion.button
+                key={gh.hour}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => handleDrillDown({ type: 'hour', value: gh.hour })}
+                onClick={() =>
+                  handleDrillDown({ type: "hour", value: gh.hour })
+                }
                 className={`flex items-center gap-4 p-4 rounded-2xl border transition-all text-left w-full ${
-                  drillDown?.type === 'hour' && drillDown.value === gh.hour 
-                  ? 'bg-orange-50 border-orange-200 ring-2 ring-orange-200/50' 
-                  : 'bg-white border-border hover:border-orange-100'
+                  drillDown?.type === "hour" && drillDown.value === gh.hour
+                    ? "bg-orange-50 border-orange-200 ring-2 ring-orange-200/50"
+                    : "bg-background border-border hover:border-orange-100 dark:hover:border-orange-900"
                 }`}
               >
                 <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 font-bold">
                   {idx + 1}
                 </div>
                 <div className="flex-1">
-                  <div className="font-bold">{gh.hour}:00 - {gh.hour + 1}:00</div>
-                  <div className="text-xs text-muted-foreground">该时段专注 {gh.count} 次</div>
+                  <div className="font-bold">
+                    {gh.hour}:00 - {gh.hour + 1}:00
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    该时段专注 {gh.count} 次
+                  </div>
                 </div>
                 <Target className="text-orange-200" size={24} />
               </motion.button>
@@ -422,7 +549,7 @@ export const Analytics: React.FC = () => {
                       {filteredRecords.length}
                     </span>
                   </h2>
-                  <button 
+                  <button
                     onClick={() => setDrillDown(null)}
                     className="p-1 hover:bg-muted rounded-full transition-colors"
                   >
@@ -438,7 +565,7 @@ export const Analytics: React.FC = () => {
                       transition={{ delay: idx * 0.05 }}
                       key={`${date}-${item.hour}`}
                       onClick={() => handleJumpToRecord(date)}
-                      className="bg-white p-4 rounded-2xl border border-border shadow-sm flex flex-col gap-2 active:scale-[0.98] transition-transform cursor-pointer group"
+                      className="bg-background p-4 rounded-2xl border border-border shadow-sm flex flex-col gap-2 active:scale-[0.98] transition-transform cursor-pointer group"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
@@ -450,9 +577,9 @@ export const Analytics: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex gap-1 flex-wrap justify-end max-w-[50%]">
-                          {item.tags.map(tag => (
-                            <span 
-                              key={tag} 
+                          {item.tags.map((tag) => (
+                            <span
+                              key={tag}
                               className="text-[10px] px-1.5 py-0.5 rounded-md text-white whitespace-nowrap"
                               style={{ backgroundColor: getTagColor(tag) }}
                             >
@@ -461,7 +588,9 @@ export const Analytics: React.FC = () => {
                           ))}
                         </div>
                       </div>
-                      <p className="text-sm font-medium leading-relaxed group-hover:text-primary transition-colors">{item.content}</p>
+                      <p className="text-sm font-medium leading-relaxed group-hover:text-primary transition-colors">
+                        {item.content}
+                      </p>
                     </motion.div>
                   ))}
                 </div>

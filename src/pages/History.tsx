@@ -48,7 +48,7 @@ export const History: React.FC = () => {
             >
               今天
             </button>
-            <button className="px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-white shadow-sm text-primary">
+            <button className="px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-background shadow-sm text-primary">
               往期
             </button>
           </div>
@@ -90,7 +90,7 @@ export const History: React.FC = () => {
                 className={`w-full text-left p-5 rounded-3xl border transition-all ${
                   isSelected
                     ? "bg-primary/5 border-primary ring-1 ring-primary"
-                    : "bg-white border-border hover:border-primary/40"
+                    : "bg-background border-border hover:border-primary/40"
                 }`}
               >
                 <div className="flex justify-between items-center">

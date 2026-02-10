@@ -20,7 +20,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
   // 判断是否为当前时段
   const isToday = useMemo(() => {
     const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     return currentDate === todayStr;
   }, [currentDate]);
   const isCurrentHour = isToday && item.hour === new Date().getHours();
@@ -95,7 +95,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
       <div
         ref={containerRef}
         className={`group transition-all duration-300 rounded-2xl p-4 
-          ${isCurrentHour ? "ring-2 ring-primary/30 shadow-md bg-white animate-pulse-subtle" : ""}
+          ${isCurrentHour ? "ring-2 ring-primary/30 shadow-md bg-background animate-pulse-subtle" : ""}
           ${isEditing ? "bg-secondary/80 ring-1 ring-primary/20" : isCurrentHour ? "" : "bg-secondary/30 hover:bg-secondary/50"}`}
         onClick={() => !isEditing && setIsEditing(true)}
         onBlur={isEditing ? handleContainerBlur : undefined}
@@ -105,7 +105,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
             <input
               ref={inputRef}
               autoFocus
-              className="w-full bg-white border-none rounded-full px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none"
+              className="w-full bg-background border-none rounded-full px-4 py-2 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none"
               value={localContent}
               onChange={(e) => setLocalContent(e.target.value)}
               placeholder="记录这段时间..."
@@ -121,7 +121,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                     exit={{ opacity: 0, x: -10 }}
                     className="flex items-center gap-1.5 mr-2"
                   >
-                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-100 text-amber-700 text-[10px] font-bold border border-amber-200">
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-500 text-[10px] font-bold border border-amber-200/50 dark:border-amber-500/20">
                       <Sparkles className="w-2.5 h-2.5" />
                       推荐
                     </div>
@@ -133,7 +133,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                           addCustomTag(tag); // 选中推荐标签时，自动将其创建到自定义标签列表中
                           toggleTag(tag);
                         }}
-                        className="px-3 py-1 rounded-full text-[11px] bg-amber-50 text-amber-600 border border-amber-200 hover:bg-amber-100 transition-colors"
+                        className="px-3 py-1 rounded-full text-[11px] bg-amber-500/5 text-amber-600 dark:text-amber-500/80 border border-amber-200/50 dark:border-amber-500/20 hover:bg-amber-500/10 transition-colors"
                       >
                         {tag}
                       </button>
@@ -154,7 +154,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                     ${
                       item.tags.includes(tag)
                         ? "bg-primary text-white shadow-sm"
-                        : "bg-white text-muted-foreground border border-muted-foreground/10 hover:bg-primary/5"
+                        : "bg-background text-muted-foreground border border-muted-foreground/10 hover:bg-primary/5"
                     }`}
                 >
                   {tag}
@@ -166,7 +166,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                 <div className="flex items-center gap-1 animate-in fade-in slide-in-from-left-2 duration-300">
                   <input
                     autoFocus
-                    className="w-20 bg-white border border-primary/30 rounded-full px-2 py-0.5 text-[11px] outline-none"
+                    className="w-20 bg-background border border-primary/30 rounded-full px-2 py-0.5 text-[11px] outline-none"
                     value={newTagInput}
                     onChange={(e) => setNewTagInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -188,7 +188,7 @@ export const ScheduleCard: React.FC<{ item: ScheduleItem }> = ({ item }) => {
                     e.stopPropagation();
                     setIsAddingTag(true);
                   }}
-                  className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] bg-white text-muted-foreground border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:text-primary transition-all"
+                  className="flex items-center gap-1 px-3 py-1 rounded-full text-[11px] bg-background text-muted-foreground border border-dashed border-muted-foreground/30 hover:border-primary/50 hover:text-primary transition-all"
                 >
                   <PlusCircle className="w-3 h-3" />
                   新增
