@@ -185,6 +185,14 @@ export const ScheduleCard: React.FC<{
               className="w-full bg-background border-none rounded-2xl px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all resize-none overflow-hidden min-h-[44px]"
               value={localContent}
               onChange={(e) => setLocalContent(e.target.value)}
+              onBlur={() => {
+                // 只有当内容发生变化时才保存，避免无意义的更新
+                if (localContent !== item.content) {
+                  handleSave();
+                } else {
+                  setIsEditing(false);
+                }
+              }}
               placeholder="记录这段时间..."
               onKeyDown={(e) => {
                 // Enter 键保存，Shift + Enter 换行
