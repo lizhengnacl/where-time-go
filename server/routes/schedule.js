@@ -6,6 +6,19 @@ const router = new Router({ prefix: "/api/schedule" });
 const DATA_DIR = path.join(__dirname, "../data");
 
 /**
+ * 确保数据目录存在
+ */
+function ensureDataDir() {
+  const fsSync = require("fs");
+  if (!fsSync.existsSync(DATA_DIR)) {
+    fsSync.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+// 初始化
+ensureDataDir();
+
+/**
  * 获取用户的据文件路径
  */
 function getUserDataFile(userId) {

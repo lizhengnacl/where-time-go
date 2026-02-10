@@ -4,7 +4,28 @@ const path = require("path");
 const crypto = require("crypto");
 
 const router = new Router({ prefix: "/api/auth" });
-const USERS_FILE = path.join(__dirname, "../data/users.json");
+const DATA_DIR = path.join(__dirname, "../data");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+
+/**
+ * 确保数据目录和用户文件存在
+ */
+async function ensureDataFile() {
+  try {
+    const fsSync = require("fs");
+    if (!fsSync.existsSync(DATA_DIR)) {
+      fsSync.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fsSync.existsSync(USERS_FILE)) {
+      fsSync.writeFileSync(USERS_FILE, "[]", "utf-8");
+    }
+  } catch (error) {
+    console.error("Failed to initialize users file:", error);
+  }
+}
+
+// 初始化
+ensureDataFile();
 
 /**
  * 辅助函数：读取用户数据
