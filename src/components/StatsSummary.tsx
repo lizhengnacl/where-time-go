@@ -49,7 +49,22 @@ export const StatsSummary: React.FC = () => {
   return (
     <div className="glass-panel sticky top-0 z-20 px-4 py-3 shadow-sm border-b">
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Logo Section */}
+          <div
+            onClick={() => navigate("/")}
+            className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity shrink-0 mr-1"
+          >
+            <img
+              src="/time/logo.svg"
+              alt="Timary Logo"
+              className="w-6 h-6 rounded-md shadow-sm"
+            />
+            <span className="text-sm font-black bg-gradient-to-br from-orange-500 to-red-600 bg-clip-text text-transparent hidden xs:block">
+              迹时
+            </span>
+          </div>
+
           {/* Tab Switcher */}
           <div className="flex p-1 bg-muted/50 rounded-xl">
             <button

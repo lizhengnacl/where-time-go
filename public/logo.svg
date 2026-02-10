@@ -1,0 +1,29 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 柔和的圆角背景，使用更明快的黄色/橙色渐变 -->
+  <rect width="200" height="200" rx="54" fill="url(#paint0_linear)" />
+  
+  <!-- 俏皮的小怪兽/拟人化时钟面部 -->
+  <!-- 眼睛 -->
+  <circle cx="70" cy="85" r="12" fill="white" />
+  <circle cx="130" cy="85" r="12" fill="white" />
+  <circle cx="74" cy="82" r="5" fill="#333" />
+  <circle cx="134" cy="82" r="5" fill="#333" />
+  
+  <!-- 弯弯的笑脸 (也是时钟的下半弧) -->
+  <path d="M60 125C75 140 125 140 140 125" stroke="white" stroke-width="8" stroke-linecap="round" />
+  
+  <!-- 俏皮的“时钟指针”小辫子 -->
+  <path d="M100 50C110 30 140 35 145 55" stroke="white" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 2" />
+  <circle cx="148" cy="58" r="6" fill="#FFD700" stroke="white" stroke-width="3" />
+
+  <!-- 闪烁的小星星，象征灵感和时光 -->
+  <path d="M165 45L168 53L176 56L168 59L165 67L162 59L154 56L162 53L165 45Z" fill="white" fill-opacity="0.8" />
+  <path d="M35 155L37 160L42 162L37 164L35 169L33 164L28 162L33 160L35 155Z" fill="white" fill-opacity="0.6" />
+
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8C00" /> <!-- 明亮的橙色 -->
+      <stop offset="1" stop-color="#FF4500" /> <!-- 暖红色 -->
+    </linearGradient>
+  </defs>
+</svg>
