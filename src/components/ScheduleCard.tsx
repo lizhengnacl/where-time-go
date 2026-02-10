@@ -41,8 +41,16 @@ export const ScheduleCard: React.FC<{
   const [aiRecommendedTags, setAiRecommendedTags] = useState<Tag[]>([]);
   const [rejectedTags, setRejectedTags] = useState<Tag[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // 自动调整 textarea 高度
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.style.height = "auto";
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, [localContent, isEditing]);
 
   // 判断是否为当前时段
   const isToday = useMemo(() => {
@@ -174,15 +182,25 @@ export const ScheduleCard: React.FC<{
 
         {isEditing ? (
           <div className="space-y-4">
-            <input
+            <textarea
               ref={inputRef}
               autoFocus
-              className="w-full bg-background border-none rounded-2xl px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+              rows={1}
+              className="w-full bg-background border-none rounded-2xl px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all resize-none overflow-hidden min-h-[44px]"
               value={localContent}
               onChange={(e) => setLocalContent(e.target.value)}
               placeholder="记录这段时间..."
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave();
+                // Enter 键保存，Shift + Enter 换行
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSave();
+                }
+                // Cmd+Enter 或 Ctrl+Enter 也可以保存
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  handleSave();
+                }
                 if (e.key === "Escape") handleCancel();
               }}
             />
@@ -369,7 +387,7 @@ export const ScheduleCard: React.FC<{
         ) : (
           <div className="min-h-[2.5rem] flex flex-col justify-center">
             {item.content ? (
-              <p className="text-sm text-foreground/90 font-medium">
+              <p className="text-sm text-foreground/90 font-medium whitespace-pre-wrap">
                 {item.content}
               </p>
             ) : (
