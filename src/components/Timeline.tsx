@@ -21,7 +21,7 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
   };
 
   return (
-    <div className="relative space-y-1">
+    <div className="relative space-y-0.5">
       {/* 时间轴装饰线 */}
       <div className="timeline-line" />
 
@@ -29,6 +29,7 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
         const prevItem = index > 0 ? items[index - 1] : null;
         const nextItem = index < items.length - 1 ? items[index + 1] : null;
 
+        // 仅在有内容时才进行聚合判断
         const isMergedWithPrev =
           prevItem && item.content && isSameContent(item, prevItem);
         const isMergedWithNext =
@@ -39,13 +40,13 @@ export const Timeline: React.FC<TimelineProps> = ({ items }) => {
             key={item.id}
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.03 }}
-            className={`relative ${isMergedWithPrev ? "-mt-1" : "pt-3"}`}
+            transition={{ delay: index * 0.01 }}
+            className={`relative ${isMergedWithPrev ? "-mt-0.5" : "pt-2"}`}
           >
             <ScheduleCard
               item={item}
-              isMergedTop={isMergedWithPrev}
-              isMergedBottom={isMergedWithNext}
+              isMergedTop={isMergedWithPrev || false}
+              isMergedBottom={isMergedWithNext || false}
             />
           </motion.div>
         );
