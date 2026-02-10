@@ -60,7 +60,7 @@ export const StatsSummary: React.FC = () => {
               alt="Timary Logo"
               className="w-6 h-6 rounded-md shadow-sm"
             />
-            <span className="text-sm font-black bg-gradient-to-br from-orange-500 to-red-600 bg-clip-text text-transparent hidden xs:block">
+            <span className="text-sm font-black bg-gradient-to-br from-blue-500 to-blue-700 bg-clip-text text-transparent hidden xs:block">
               迹时
             </span>
           </div>
