@@ -26,7 +26,7 @@ export const History: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col">
+    <div className="max-w-2xl mx-auto min-h-screen bg-background flex flex-col shadow-2xl border-x border-border/50">
       {/* 顶部导航 */}
       <div className="glass-panel sticky top-0 z-20 px-4 py-3 flex items-center justify-between border-b shadow-sm">
         <div className="flex items-center gap-4">

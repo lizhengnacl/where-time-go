@@ -239,7 +239,7 @@ export const Analytics: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-background flex flex-col pb-10">
+    <div className="max-w-2xl mx-auto min-h-screen bg-background flex flex-col pb-10 shadow-2xl border-x border-border/50">
       {/* Header */}
       <div className="glass-panel sticky top-0 z-20 px-6 py-4 flex items-center gap-4">
         <button

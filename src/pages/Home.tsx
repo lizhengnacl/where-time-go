@@ -31,7 +31,7 @@ export const Home: React.FC = () => {
   }, [currentDate]);
 
   return (
-    <div className="relative max-w-md mx-auto h-screen flex flex-col overflow-hidden bg-background">
+    <div className="relative max-w-2xl mx-auto h-screen flex flex-col overflow-hidden bg-background shadow-2xl border-x border-border/50">
       {/* 顶部统计摘要 */}
       <StatsSummary />
 
