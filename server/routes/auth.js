@@ -2,8 +2,19 @@ const Router = require("@koa/router");
 const fs = require("fs").promises;
 const path = require("path");
 const crypto = require("crypto");
+const createRateLimiter = require("../middleware/rateLimiter");
 
 const router = new Router({ prefix: "/api/auth" });
+
+// 针对登录和注册接口增加频控，防止暴力破解
+const authRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 分钟
+  max: 10,             // 10 次请求
+  message: "操作过于频繁，请稍后再试",
+});
+
+router.use(authRateLimiter);
+
 const DATA_DIR = path.join(__dirname, "../data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 

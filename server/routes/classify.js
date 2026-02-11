@@ -1,8 +1,16 @@
 const Router = require("@koa/router");
 const { openai, DEFAULT_MODEL } = require("../openai");
 const { CLASSIFY_PROMPT } = require("../prompts");
+const createRateLimiter = require("../middleware/rateLimiter");
 
 const router = new Router();
+
+// 针对 AI 接口增加频控，防止资源滥用
+const aiRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000, // 1 分钟
+  max: 20, // 20 次请求
+  message: "AI 分析请求过于频繁，请稍后再试",
+});
 
 /**
  * 中间件：验证用户身份
@@ -22,7 +30,7 @@ async function authMiddleware(ctx, next) {
  * POST /api/classify
  * Body: { text: "事项描述" }
  */
-router.post("/api/classify", authMiddleware, async (ctx) => {
+router.post("/api/classify", aiRateLimiter, authMiddleware, async (ctx) => {
   const { text, excludeTags = [] } = ctx.request.body;
 
   if (!text) {
