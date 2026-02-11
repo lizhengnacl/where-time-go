@@ -126,14 +126,9 @@ export const Analytics: React.FC = () => {
 
           // 黄金效率时段统计逻辑：
           // 判定为“生产力”时段的标准：
-          // 1. 显式包含“工作”或“学习”标签
-          // 2. 或者包含用户自定义的标签（非“休息”、“其他”等系统默认非生产力标签）
-          const nonProductiveTags = ["休息", "其他"];
+          // 仅统计显式包含“工作”或“学习”标签的时段
           const isProductive = item.tags.some(
-            (tag) =>
-              tag === "工作" ||
-              tag === "学习" ||
-              !nonProductiveTags.includes(tag),
+            (tag) => tag === "工作" || tag === "学习",
           );
 
           if (isProductive) {
