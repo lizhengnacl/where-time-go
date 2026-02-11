@@ -1,6 +1,7 @@
 const Router = require("@koa/router");
 const fs = require("fs").promises;
 const path = require("path");
+const authMiddleware = require("../middleware/auth");
 
 const router = new Router({ prefix: "/api/schedule" });
 const DATA_DIR = path.join(__dirname, "../data");
@@ -47,22 +48,6 @@ async function writeData(userId, data) {
   if (!userId) return;
   const dataFile = getUserDataFile(userId);
   await fs.writeFile(dataFile, JSON.stringify(data, null, 2), "utf-8");
-}
-
-/**
- * 中间件：验证用户身份
- */
-async function authMiddleware(ctx, next) {
-  const authHeader = ctx.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    ctx.status = 401;
-    ctx.body = { success: false, message: "未登录" };
-    return;
-  }
-  const token = authHeader.split(" ")[1];
-  // 简单起见，token 就是 userId
-  ctx.state.userId = token;
-  await next();
 }
 
 /**

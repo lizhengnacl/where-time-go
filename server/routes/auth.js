@@ -2,7 +2,11 @@ const Router = require("@koa/router");
 const fs = require("fs").promises;
 const path = require("path");
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 const createRateLimiter = require("../middleware/rateLimiter");
+
+const JWT_SECRET = process.env.WTG_JWT_SECRET || "timary_fallback_secret";
+const JWT_EXPIRES_IN = "7d"; // Token 有效期 7 天
 
 const router = new Router({ prefix: "/api/auth" });
 
@@ -98,12 +102,19 @@ router.post("/authenticate", async (ctx) => {
     await saveUsers(users);
   }
 
+  // 生成签署的 JWT Token
+  const token = jwt.sign(
+    { userId: user.id, username: user.username },
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN },
+  );
+
   ctx.body = {
     success: true,
     data: {
       id: user.id,
       username: user.username,
-      token: user.id, // 简单起见，直接用 ID 作为 token
+      token, // 返回签署后的 Token
     },
     message: user.createdAt ? "欢迎加入迹时！" : "欢迎回来！",
   };
