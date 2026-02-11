@@ -13,8 +13,10 @@ import {
   User,
   Cloud,
   CloudOff,
+  MessageSquarePlus,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { FeedbackModal } from "./FeedbackModal";
 
 const TAG_COLORS: Record<string, string> = {
   工作: "bg-blue-500",
@@ -31,6 +33,7 @@ const getTagColor = (tag: string) => {
 export const StatsSummary: React.FC = () => {
   const { stats, items, currentDate, setCurrentDate } = useSchedule();
   const { theme, toggleTheme } = useTheme();
+  const [isFeedbackOpen, setIsFeedbackOpen] = React.useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const recordedCount = items.filter((i) => i.content).length;
@@ -81,6 +84,14 @@ export const StatsSummary: React.FC = () => {
             title="数据统计"
           >
             <BarChart2 size={19} />
+          </button>
+
+          <button
+            onClick={() => setIsFeedbackOpen(true)}
+            className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+            title="反馈建议"
+          >
+            <MessageSquarePlus size={19} />
           </button>
 
           {localStorage.getItem("user") ? (
@@ -214,6 +225,7 @@ export const StatsSummary: React.FC = () => {
           ))}
         </div>
       )}
+      <FeedbackModal isOpen={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} />
     </div>
   );
 };
