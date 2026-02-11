@@ -51,16 +51,40 @@ export const TagSelector: React.FC<TagSelectorProps> = ({
               autoFocus
               className="w-20 bg-background border border-primary/30 rounded-full px-2 py-0.5 text-[11px] outline-none"
               value={newTagInput}
+              onFocus={(e) =>
+                e.currentTarget.setSelectionRange(
+                  e.currentTarget.value.length,
+                  e.currentTarget.value.length,
+                )
+              }
+              onMouseDown={(e) => {
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
               onChange={(e) => onSetNewTagInput(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") onAddCustomTag();
-                if (e.key === "Escape") onSetIsAddingTag(false);
+                if (e.key === "Enter") {
+                  e.stopPropagation();
+                  onAddCustomTag();
+                }
+                if (e.key === "Escape") {
+                  e.stopPropagation();
+                  onSetIsAddingTag(false);
+                }
               }}
               placeholder="标签名"
             />
             <button
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={onAddCustomTag}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddCustomTag();
+              }}
               className="p-1 rounded-full bg-primary text-white"
             >
               <Check className="w-3 h-3" />

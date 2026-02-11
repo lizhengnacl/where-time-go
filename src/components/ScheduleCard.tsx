@@ -169,10 +169,27 @@ export const ScheduleCard: React.FC<{
                 ref={inputRef}
                 autoFocus
                 rows={1}
+                onFocus={(e) =>
+                  e.currentTarget.setSelectionRange(
+                    e.currentTarget.value.length,
+                    e.currentTarget.value.length,
+                  )
+                }
                 className="w-full bg-background border-none rounded-2xl px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-primary/30 outline-none transition-all resize-none overflow-hidden min-h-[44px]"
                 value={localContent}
                 onChange={(e) => setLocalContent(e.target.value)}
-                onBlur={() => {
+                onBlur={(e) => {
+                  // 如果焦点移动到了标签选择器相关的元素上，不要关闭编辑模式
+                  const relatedTarget = e.relatedTarget as HTMLElement;
+                  if (
+                    relatedTarget &&
+                    (relatedTarget.closest(".tag-selector-container") ||
+                      relatedTarget.tagName === "INPUT" ||
+                      relatedTarget.tagName === "BUTTON")
+                  ) {
+                    return;
+                  }
+
                   if (localContent !== item.content) {
                     handleSave();
                   } else {
@@ -205,7 +222,7 @@ export const ScheduleCard: React.FC<{
               />
 
               {/* 标签与操作区 */}
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 tag-selector-container">
                 <TagSelector
                   customTags={customTags}
                   selectedTags={item.tags}
