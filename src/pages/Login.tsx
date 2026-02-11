@@ -7,7 +7,6 @@ import { ArrowLeft, User, Lock, Mail } from "lucide-react";
 import logo from "../assets/logo.svg";
 
 export function Login() {
-  const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,10 +18,8 @@ export function Login() {
     setLoading(true);
     setError("");
 
-    const endpoint = isLogin ? "/time/api/auth/login" : "/time/api/auth/signup";
-
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch("/time/api/auth/authenticate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -39,7 +36,7 @@ export function Login() {
         }
         window.location.href = "/time/";
       } else {
-        setError(result.message || "操作失败");
+        setError(result.message || "认证失败");
       }
     } catch (err) {
       setError("网络错误，请稍后再试");
@@ -83,107 +80,93 @@ export function Login() {
         </div>
 
         {/* Login Card */}
-        <div className="glass-panel border border-border/40 shadow-2xl rounded-[2.5rem] overflow-hidden bg-background/40 backdrop-blur-xl">
-          <div className="p-2">
-            <Tabs
-              fullWidth
+        <div className="glass-panel border border-border/40 shadow-2xl rounded-[2.5rem] overflow-hidden bg-background/40 backdrop-blur-xl p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-xl font-bold">快捷登录 / 注册</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              未注册用户将自动创建账号
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <Input
+              label="用户名"
+              placeholder="您的专属昵称"
+              labelPlacement="outside"
+              variant="bordered"
               size="lg"
-              aria-label="Auth options"
-              selectedKey={isLogin ? "login" : "signup"}
-              onSelectionChange={(key) => setIsLogin(key === "login")}
+              startContent={
+                <User size={18} className="text-muted-foreground" />
+              }
               classNames={{
-                tabList: "bg-transparent p-1",
-                cursor: "bg-background shadow-sm rounded-2xl",
-                tab: "h-12 font-bold",
-                tabContent: "group-data-[selected=true]:text-primary",
+                inputWrapper:
+                  "rounded-2xl border-border/40 hover:border-primary/50 focus-within:!border-primary transition-all",
+                label: "font-bold text-foreground/80",
               }}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <Input
+              label="密码"
+              placeholder="开启时光之门"
+              labelPlacement="outside"
+              variant="bordered"
+              size="lg"
+              type="password"
+              startContent={
+                <Lock size={18} className="text-muted-foreground" />
+              }
+              classNames={{
+                inputWrapper:
+                  "rounded-2xl border-border/40 hover:border-primary/50 focus-within:!border-primary transition-all",
+                label: "font-bold text-foreground/80",
+              }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-danger text-xs font-bold text-center"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <Button
+              type="submit"
+              color="primary"
+              size="lg"
+              isLoading={loading}
+              className="rounded-2xl h-14 font-bold text-base shadow-lg shadow-primary/20 mt-2"
             >
-              <Tab key="login" title="登 录" />
-              <Tab key="signup" title="注 册" />
-            </Tabs>
-          </div>
+              进入迹时
+            </Button>
 
-          <div className="p-8 pt-4">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <Input
-                label="用户名"
-                placeholder="您的专属昵称"
-                labelPlacement="outside"
-                variant="bordered"
-                size="lg"
-                startContent={
-                  <User size={18} className="text-muted-foreground" />
-                }
-                classNames={{
-                  inputWrapper:
-                    "rounded-2xl border-border/40 hover:border-primary/50 focus-within:!border-primary transition-all",
-                  label: "font-bold text-foreground/80",
-                }}
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-              <Input
-                label="密码"
-                placeholder="开启时光之门"
-                labelPlacement="outside"
-                variant="bordered"
-                size="lg"
-                type="password"
-                startContent={
-                  <Lock size={18} className="text-muted-foreground" />
-                }
-                classNames={{
-                  inputWrapper:
-                    "rounded-2xl border-border/40 hover:border-primary/50 focus-within:!border-primary transition-all",
-                  label: "font-bold text-foreground/80",
-                }}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+            <div className="flex items-center gap-4 my-2">
+              <div className="h-px bg-border/40 flex-1" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                或者
+              </span>
+              <div className="h-px bg-border/40 flex-1" />
+            </div>
 
-              <AnimatePresence mode="wait">
-                {error && (
-                  <motion.p
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-danger text-xs font-bold text-center"
-                  >
-                    {error}
-                  </motion.p>
-                )}
-              </AnimatePresence>
-
-              <Button
-                type="submit"
-                color="primary"
-                size="lg"
-                isLoading={loading}
-                className="rounded-2xl h-14 font-bold text-base shadow-lg shadow-primary/20 mt-2"
-              >
-                {isLogin ? "立即登录" : "开启记录之旅"}
-              </Button>
-
-              <div className="flex items-center gap-4 my-2">
-                <div className="h-px bg-border/40 flex-1" />
-                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  或者
-                </span>
-                <div className="h-px bg-border/40 flex-1" />
-              </div>
-
-              <Button
-                variant="light"
-                onPress={() => navigate("/")}
-                startContent={<ArrowLeft size={18} />}
-                className="rounded-2xl h-12 font-bold text-muted-foreground hover:text-foreground transition-colors"
-              >
-                以游客身份继续
-              </Button>
-            </form>
-          </div>
+            <Button
+              variant="light"
+              onPress={() => navigate("/")}
+              startContent={<ArrowLeft size={18} />}
+              className="rounded-2xl h-12 font-bold text-muted-foreground hover:text-foreground transition-colors"
+            >
+              以游客身份继续
+            </Button>
+          </form>
         </div>
 
         {/* Footer Info */}

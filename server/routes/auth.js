@@ -9,7 +9,7 @@ const router = new Router({ prefix: "/api/auth" });
 // 针对登录和注册接口增加频控，防止暴力破解
 const authRateLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 分钟
-  max: 10,             // 10 次请求
+  max: 10, // 10 次请求
   message: "操作过于频繁，请稍后再试",
 });
 
@@ -65,9 +65,10 @@ function hashPassword(password) {
 }
 
 /**
- * 注册
+ * 登录/注册合一
+ * POST /api/auth/authenticate
  */
-router.post("/signup", async (ctx) => {
+router.post("/authenticate", async (ctx) => {
   const { username, password } = ctx.request.body;
   if (!username || !password) {
     ctx.status = 400;
@@ -76,45 +77,25 @@ router.post("/signup", async (ctx) => {
   }
 
   const users = await readUsers();
-  if (users.find((u) => u.username === username)) {
-    ctx.status = 400;
-    ctx.body = { success: false, message: "用户名已存在" };
-    return;
-  }
+  let user = users.find((u) => u.username === username);
 
-  const newUser = {
-    id: crypto.randomUUID(),
-    username,
-    password: hashPassword(password),
-  };
-
-  users.push(newUser);
-  await saveUsers(users);
-
-  ctx.body = {
-    success: true,
-    data: {
-      id: newUser.id,
-      username: newUser.username,
-      token: newUser.id, // 简单起见，直接用 ID 作为 token
-    },
-  };
-});
-
-/**
- * 登录
- */
-router.post("/login", async (ctx) => {
-  const { username, password } = ctx.request.body;
-  const users = await readUsers();
-  const user = users.find(
-    (u) => u.username === username && u.password === hashPassword(password),
-  );
-
-  if (!user) {
-    ctx.status = 401;
-    ctx.body = { success: false, message: "用户名或密码错误" };
-    return;
+  if (user) {
+    // 如果用户存在，校验密码进行登录
+    if (user.password !== hashPassword(password)) {
+      ctx.status = 401;
+      ctx.body = { success: false, message: "用户名已存在且密码错误" };
+      return;
+    }
+  } else {
+    // 如果用户不存在，自动注册
+    user = {
+      id: crypto.randomUUID(),
+      username,
+      password: hashPassword(password),
+      createdAt: new Date().toISOString(),
+    };
+    users.push(user);
+    await saveUsers(users);
   }
 
   ctx.body = {
@@ -122,8 +103,9 @@ router.post("/login", async (ctx) => {
     data: {
       id: user.id,
       username: user.username,
-      token: user.id,
+      token: user.id, // 简单起见，直接用 ID 作为 token
     },
+    message: user.createdAt ? "欢迎加入迹时！" : "欢迎回来！",
   };
 });
 
