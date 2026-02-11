@@ -21,6 +21,8 @@ import { AnalyticsStatCards } from "../components/AnalyticsStatCards";
 import { AnalyticsCategoryChart } from "../components/AnalyticsCategoryChart";
 import { AnalyticsTrendChart } from "../components/AnalyticsTrendChart";
 import { AnalyticsGoldenHours } from "../components/AnalyticsGoldenHours";
+import { AnalyticsWeeklyRhythm } from "../components/AnalyticsWeeklyRhythm";
+import { AnalyticsIntensityChart } from "../components/AnalyticsIntensityChart";
 import { AnalyticsDrillDownList } from "../components/AnalyticsDrillDownList";
 import { Cloud, Info } from "lucide-react";
 
@@ -112,13 +114,31 @@ export const Analytics: React.FC = () => {
     const tagCounts: Record<string, number> = {};
     const dailyTrend: { date: string; fullDate: string; count: number }[] = [];
     const hourDist = Array(24).fill(0);
+    const hourDistAll = Array(24).fill(0);
+    const weekdayActivity = Array(7)
+      .fill(0)
+      .map(() => ({ count: 0, days: 0 }));
+    const dayToWeekday = (dateStr: string) => {
+      const date = new Date(dateStr);
+      return (date.getDay() + 6) % 7; // 0-6 represents Mon-Sun
+    };
+
+    const processedDays = new Set<string>();
 
     targetDates.forEach((date) => {
       const dayItems = fullHistory[date] || [];
       let dayCount = 0;
+      const weekdayIdx = dayToWeekday(date);
+      if (!processedDays.has(date)) {
+        weekdayActivity[weekdayIdx].days++;
+        processedDays.add(date);
+      }
+
       dayItems.forEach((item) => {
         if (item.content) {
           dayCount++;
+          weekdayActivity[weekdayIdx].count++;
+          hourDistAll[item.hour]++;
           // 统计所有标签的频次
           item.tags.forEach((tag) => {
             tagCounts[tag] = (tagCounts[tag] || 0) + 1;
@@ -143,6 +163,21 @@ export const Analytics: React.FC = () => {
       });
     });
 
+    const weekdayNames = [
+      "周一",
+      "周二",
+      "周三",
+      "周四",
+      "周五",
+      "周六",
+      "周日",
+    ];
+    const weekdayData = weekdayActivity.map((item, idx) => ({
+      name: weekdayNames[idx],
+      avg: item.days > 0 ? Number((item.count / item.days).toFixed(1)) : 0,
+      isWeekend: idx >= 5,
+    }));
+
     const pieData = Object.entries(tagCounts).map(([name, value]) => ({
       name,
       value,
@@ -158,10 +193,19 @@ export const Analytics: React.FC = () => {
     const goldenHours: { hour: number; count: number }[] =
       allProductiveHours.slice(0, 3);
 
+    // 计算生产力占比 (工作+学习 vs 总计)
+    const productiveCount = (tagCounts["工作"] || 0) + (tagCounts["学习"] || 0);
+    const totalTagCount = Object.values(tagCounts).reduce((a, b) => a + b, 0);
+    const productivityRatio =
+      totalTagCount > 0 ? (productiveCount / totalTagCount) * 100 : 0;
+
     return {
       pieData,
       dailyTrend,
       goldenHours,
+      weekdayData,
+      hourDistAll,
+      productivityRatio,
       totalRecords: dailyTrend.reduce((acc, curr) => acc + curr.count, 0),
       periodDays: targetDates.length,
     };
@@ -373,7 +417,13 @@ export const Analytics: React.FC = () => {
           onClearFilter={() => setDrillDown(null)}
         />
 
-        {/* 3. 黄金时间洞察 */}
+        {/* 3. 周内节律 */}
+        <AnalyticsWeeklyRhythm weekdayData={analysisData.weekdayData} />
+
+        {/* 4. 全天活跃强度 */}
+        <AnalyticsIntensityChart hourDist={analysisData.hourDistAll} />
+
+        {/* 5. 黄金时间洞察 */}
         <AnalyticsGoldenHours
           goldenHours={analysisData.goldenHours}
           drillDown={drillDown}
@@ -381,7 +431,7 @@ export const Analytics: React.FC = () => {
           onClearFilter={() => setDrillDown(null)}
         />
 
-        {/* 4. 详细记录回顾 */}
+        {/* 5. 详细记录回顾 */}
         <AnalyticsDrillDownList
           drillDown={drillDown}
           filteredRecords={filteredRecords}
@@ -389,16 +439,72 @@ export const Analytics: React.FC = () => {
           detailRef={detailRef}
         />
 
-        {/* 5. 洞察与建议 */}
-        <section className="p-5 rounded-3xl bg-muted/50 border border-muted-foreground/10 space-y-3">
-          <h3 className="font-bold flex items-center gap-2">
-            <Coffee size={18} className="text-primary" />
-            洞察与建议
+        {/* 6. 洞察与建议 */}
+        <section className="p-6 rounded-[2.5rem] bg-primary/5 border border-primary/10 space-y-4">
+          <h3 className="font-bold flex items-center gap-2 text-lg">
+            <Coffee size={20} className="text-primary" />
+            时光洞察
           </h3>
-          <div className="text-sm text-muted-foreground space-y-2">
-            <p>• 每一个数据点都记录着你真实的“迹时”。</p>
-            <p>• 点击图表可进一步下钻，回顾高效时段的专注点。</p>
-            <p>• 坚持记录，让数据为你揭示时间利用的规律。</p>
+          <div className="grid grid-cols-1 gap-4">
+            <div className="bg-background/50 p-4 rounded-2xl border border-border/50">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  生产力分布
+                </span>
+                <span className="text-sm font-black text-primary">
+                  {analysisData.productivityRatio.toFixed(0)}%
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${analysisData.productivityRatio}%` }}
+                  className="bg-primary h-full"
+                />
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                {analysisData.productivityRatio > 50
+                  ? "太棒了！你的大部分时间都投入在了核心产出上，请继续保持这种专注。"
+                  : "目前非工作/学习类事务占据了较多时间，建议检查是否有可以优化的碎片化时段。"}
+              </p>
+            </div>
+
+            <div className="space-y-3 px-1">
+              <div className="flex items-start gap-3">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  你的记录活跃度在{" "}
+                  <span className="text-foreground font-bold">
+                    {
+                      analysisData.weekdayData.sort((a, b) => b.avg - a.avg)[0]
+                        ?.name
+                    }
+                  </span>{" "}
+                  达到顶峰，这是你状态最好的日子。
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {analysisData.goldenHours.length > 0
+                    ? `你的黄金效率时段集中在 ${analysisData.goldenHours.map((h) => `${h.hour}:00`).join("、")}，建议将最难的任务安排在这些时段。`
+                    : "继续记录更多数据，AI 将为你揭示最适合你的高效时段。"}
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  你的全天活跃强度呈现{" "}
+                  <span className="text-foreground font-bold">
+                    {analysisData.hourDistAll.indexOf(
+                      Math.max(...analysisData.hourDistAll),
+                    )}
+                    :00
+                  </span>{" "}
+                  附近的单峰分布，建议将精力最充沛的时段留给最重要的事。
+                </p>
+              </div>
+            </div>
           </div>
         </section>
       </div>
