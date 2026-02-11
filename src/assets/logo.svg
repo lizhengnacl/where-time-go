@@ -1,0 +1,27 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 现代感圆角矩形背景 (iOS 风格) -->
+  <rect width="200" height="200" rx="46" fill="url(#paint0_linear)" />
+  
+  <!-- 装饰性光晕，增强质感 -->
+  <circle cx="150" cy="50" r="80" fill="white" fill-opacity="0.1" />
+  
+  <!-- 核心图标：时钟与轨迹的结合 -->
+  <!-- 1. 轨迹路径 (Trace) - 构成一个抽象的 't' -->
+  <path d="M100 55V145C100 155 108 160 125 150" stroke="white" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- 2. 横向笔画 - 同时也像时钟的指针 -->
+  <path d="M75 90H125" stroke="white" stroke-width="16" stroke-linecap="round" />
+  
+  <!-- 3. 外围环形轨道 - 象征时间的循环 -->
+  <path d="M60 100C60 77.9086 77.9086 60 100 60C122.091 60 140 77.9086 140 100C140 122.091 122.091 140 100 140" stroke="white" stroke-width="8" stroke-dasharray="4 8" stroke-opacity="0.5" stroke-linecap="round" />
+
+  <!-- 4. 终点高亮圆点 - 象征“此刻” -->
+  <circle cx="125" cy="150" r="8" fill="white" />
+
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6" /> <!-- Tailwind Blue 500 -->
+      <stop offset="1" stop-color="#1D4ED8" /> <!-- Tailwind Blue 700 -->
+    </linearGradient>
+  </defs>
+</svg>

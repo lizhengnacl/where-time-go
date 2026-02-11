@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { syncLocalToCloud } from "../lib/storage";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, User, Lock, Mail } from "lucide-react";
+import logo from "../assets/logo.svg";
 
 export function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -66,14 +67,19 @@ export function Login() {
             onClick={() => navigate("/")}
             className="w-16 h-16 bg-background border border-border/50 rounded-2xl shadow-xl flex items-center justify-center mb-4 cursor-pointer glass-panel"
           >
-            <img src="/time/logo.svg" alt="Logo" className="w-10 h-10" />
+            <img src={logo} alt="Logo" className="w-10 h-10" />
           </motion.div>
           <h1 className="text-3xl font-black bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
             迹时 Timary
           </h1>
-          <p className="text-muted-foreground text-sm mt-2 font-medium">
-            记录时光流转，遇见更好的自己
-          </p>
+          <div className="flex flex-col items-center gap-1 mt-3">
+            <p className="text-foreground/80 text-sm font-bold">
+              随手记，AI 理。
+            </p>
+            <p className="text-muted-foreground text-[12px] font-medium">
+              放下负担，让 AI 为您梳理时光的意义
+            </p>
+          </div>
         </div>
 
         {/* Login Card */}

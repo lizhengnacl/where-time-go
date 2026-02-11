@@ -109,10 +109,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 <MessageSquarePlus className="text-primary w-6 h-6" />
               </div>
               <h2 className="text-xl font-black bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
-                您的心声，我们的动力
+                随心输入，AI 懂你
               </h2>
               <p className="text-muted-foreground text-[11px] font-medium tracking-wide uppercase">
-                迹时 (Timary) 期待您的建议
+                迹时 (Timary) 持续进化中
               </p>
             </ModalHeader>
 
@@ -127,9 +127,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     <div className="w-20 h-20 bg-primary/10 rounded-[2rem] flex items-center justify-center mb-6 shadow-xl border border-primary/20">
                       <Heart className="text-primary fill-primary w-10 h-10 animate-pulse" />
                     </div>
-                    <h3 className="text-2xl font-black mb-3">感谢您的反馈！</h3>
+                    <h3 className="text-2xl font-black mb-3">感谢您的陪伴！</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed px-4">
-                      您的建议已存入我们的“时光胶囊”，我们将认真阅读并努力让迹时变得更好。
+                      您的建议将帮助 AI
+                      更好地理解您的每一刻。迹时会不断迭代，让记录更轻盈。
                     </p>
                   </motion.div>
                 ) : (
@@ -186,7 +187,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
                     <Textarea
                       label="反馈内容"
-                      placeholder="想对我们说点什么？或者发现了什么小问题？"
+                      placeholder="AI 分析得准吗？输入是否足够随意？请告诉我们..."
                       labelPlacement="outside"
                       variant="bordered"
                       size="lg"

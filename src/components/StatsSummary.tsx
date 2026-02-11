@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FeedbackModal } from "./FeedbackModal";
+import logo from "../assets/logo.svg";
 
 const TAG_COLORS: Record<string, string> = {
   工作: "bg-blue-500",
@@ -60,12 +61,12 @@ export const StatsSummary: React.FC = () => {
           className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
         >
           <img
-            src="/time/logo.svg"
+            src={logo}
             alt="Timary Logo"
             className="w-7 h-7 rounded-lg shadow-sm"
           />
           <span className="text-base font-black bg-gradient-to-br from-blue-500 to-blue-700 bg-clip-text text-transparent">
-            迹时
+            迹时 - Timary
           </span>
         </div>
 
@@ -141,18 +142,8 @@ export const StatsSummary: React.FC = () => {
                   max={todayStr}
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                {isLoggedIn ? (
-                  <>
-                    <Cloud size={10} className="text-green-500" />
-                    云端同步已开启
-                  </>
-                ) : (
-                  <>
-                    <CloudOff size={10} className="text-amber-500" />
-                    本地模式，建议登录
-                  </>
-                )}
+              <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 font-medium">
+                随手记，AI 理。
               </p>
             </div>
 
