@@ -23,6 +23,8 @@ import { AnalyticsTrendChart } from "../components/AnalyticsTrendChart";
 import { AnalyticsGoldenHours } from "../components/AnalyticsGoldenHours";
 import { AnalyticsWeeklyRhythm } from "../components/AnalyticsWeeklyRhythm";
 import { AnalyticsIntensityChart } from "../components/AnalyticsIntensityChart";
+import { AnalyticsDeepWork } from "../components/AnalyticsDeepWork";
+import { AnalyticsEnergyBalance } from "../components/AnalyticsEnergyBalance";
 import { AnalyticsDrillDownList } from "../components/AnalyticsDrillDownList";
 import { Cloud, Info } from "lucide-react";
 
@@ -118,6 +120,17 @@ export const Analytics: React.FC = () => {
     const weekdayActivity = Array(7)
       .fill(0)
       .map(() => ({ count: 0, days: 0 }));
+
+    // 理论支撑：Deep Work (Cal Newport) - 连续专注时长统计
+    const deepWorkSessions: number[] = []; // 存储每次连续专注的小时数
+
+    // 理论支撑：能量管理 (Jim Loehr) - 生产力 vs 恢复活动配比
+    const energyBalance = {
+      production: 0, // 工作、学习
+      recovery: 0, // 休息、运动
+      others: 0, // 其他
+    };
+
     const dayToWeekday = (dateStr: string) => {
       const date = new Date(dateStr);
       return (date.getDay() + 6) % 7; // 0-6 represents Mon-Sun
@@ -134,6 +147,8 @@ export const Analytics: React.FC = () => {
         processedDays.add(date);
       }
 
+      let currentDeepWorkStreak = 0;
+
       dayItems.forEach((item) => {
         if (item.content) {
           dayCount++;
@@ -142,6 +157,11 @@ export const Analytics: React.FC = () => {
           // 统计所有标签的频次
           item.tags.forEach((tag) => {
             tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+
+            // 能量平衡统计
+            if (tag === "工作" || tag === "学习") energyBalance.production++;
+            else if (tag === "休息" || tag === "运动") energyBalance.recovery++;
+            else energyBalance.others++;
           });
 
           // 黄金效率时段统计逻辑：
@@ -153,9 +173,26 @@ export const Analytics: React.FC = () => {
 
           if (isProductive) {
             hourDist[item.hour]++;
+            currentDeepWorkStreak++;
+          } else {
+            if (currentDeepWorkStreak > 0) {
+              deepWorkSessions.push(currentDeepWorkStreak);
+              currentDeepWorkStreak = 0;
+            }
+          }
+        } else {
+          if (currentDeepWorkStreak > 0) {
+            deepWorkSessions.push(currentDeepWorkStreak);
+            currentDeepWorkStreak = 0;
           }
         }
       });
+
+      // 处理跨天结束的 streak
+      if (currentDeepWorkStreak > 0) {
+        deepWorkSessions.push(currentDeepWorkStreak);
+      }
+
       dailyTrend.unshift({
         date: date.split("-").slice(1).join("/"),
         fullDate: date,
@@ -206,6 +243,8 @@ export const Analytics: React.FC = () => {
       weekdayData,
       hourDistAll,
       productivityRatio,
+      deepWorkSessions,
+      energyBalance,
       totalRecords: dailyTrend.reduce((acc, curr) => acc + curr.count, 0),
       periodDays: targetDates.length,
     };
@@ -423,7 +462,13 @@ export const Analytics: React.FC = () => {
         {/* 4. 全天活跃强度 */}
         <AnalyticsIntensityChart hourDist={analysisData.hourDistAll} />
 
-        {/* 5. 黄金时间洞察 */}
+        {/* 5. 专注深度 (Deep Work) */}
+        <AnalyticsDeepWork sessions={analysisData.deepWorkSessions} />
+
+        {/* 6. 能量平衡 (Energy Balance) */}
+        <AnalyticsEnergyBalance balance={analysisData.energyBalance} />
+
+        {/* 7. 黄金时间洞察 */}
         <AnalyticsGoldenHours
           goldenHours={analysisData.goldenHours}
           drillDown={drillDown}
@@ -439,7 +484,7 @@ export const Analytics: React.FC = () => {
           detailRef={detailRef}
         />
 
-        {/* 6. 洞察与建议 */}
+        {/* 8. 洞察与建议 */}
         <section className="p-6 rounded-[2.5rem] bg-primary/5 border border-primary/10 space-y-4">
           <h3 className="font-bold flex items-center gap-2 text-lg">
             <Coffee size={20} className="text-primary" />
@@ -470,6 +515,40 @@ export const Analytics: React.FC = () => {
             </div>
 
             <div className="space-y-3 px-1">
+              {/* Deep Work Insight */}
+              {analysisData.deepWorkSessions.length > 0 && (
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0" />
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    你的最长连续专注时间为{" "}
+                    <span className="text-foreground font-bold">
+                      {Math.max(...analysisData.deepWorkSessions)} 小时
+                    </span>
+                    。
+                    {Math.max(...analysisData.deepWorkSessions) >= 2
+                      ? "这符合深度工作理论，长时段的专注能极大地提升任务完成质量。"
+                      : "建议尝试将碎片化的工作合并，通过至少 90 分钟的连续时段来进入深度工作状态。"}
+                  </p>
+                </div>
+              )}
+
+              {/* Energy Balance Insight */}
+              <div className="flex items-start gap-3">
+                <div className="mt-1 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  当前的能量配比为{" "}
+                  <span className="text-foreground font-bold">
+                    {analysisData.energyBalance.production} (消耗) :{" "}
+                    {analysisData.energyBalance.recovery} (恢复)
+                  </span>
+                  。
+                  {analysisData.energyBalance.production >
+                  analysisData.energyBalance.recovery * 3
+                    ? "注意：生产消耗远大于能量恢复，建议增加主动休息，防止认知疲劳。"
+                    : "你的能量管理非常平衡，这有助于保持长期的稳定产出。"}
+                </p>
+              </div>
+
               <div className="flex items-start gap-3">
                 <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -483,6 +562,7 @@ export const Analytics: React.FC = () => {
                   达到顶峰，这是你状态最好的日子。
                 </p>
               </div>
+
               <div className="flex items-start gap-3">
                 <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -491,6 +571,7 @@ export const Analytics: React.FC = () => {
                     : "继续记录更多数据，AI 将为你揭示最适合你的高效时段。"}
                 </p>
               </div>
+
               <div className="flex items-start gap-3">
                 <div className="mt-1 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
                 <p className="text-sm text-muted-foreground leading-relaxed">
@@ -501,7 +582,7 @@ export const Analytics: React.FC = () => {
                     )}
                     :00
                   </span>{" "}
-                  附近的单峰分布，建议将精力最充沛的时段留给最重要的事。
+                  附近的分布，建议根据此规律优化精力分配。
                 </p>
               </div>
             </div>
