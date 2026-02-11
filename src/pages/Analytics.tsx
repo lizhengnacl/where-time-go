@@ -317,66 +317,70 @@ export const Analytics: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto min-h-screen bg-background flex flex-col pb-10 shadow-2xl border-x border-border/50">
+    <div className="max-w-2xl mx-auto min-h-screen bg-background flex flex-col pb-10 shadow-2xl border-x border-border/50 relative overflow-hidden">
+      {/* 背景装饰 */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+
       {/* Header */}
-      <div className="glass-panel sticky top-0 z-20 px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={() => navigate("/")}
-          className="p-2 -ml-2 rounded-full hover:bg-muted transition-colors"
-        >
-          <ChevronLeft size={24} />
-        </button>
-        <h1 className="text-xl font-bold">时间洞察</h1>
+      <div className="glass-panel sticky top-0 z-20 px-6 py-4 flex items-center justify-between border-b border-border/40 bg-background/60 backdrop-blur-xl">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/")}
+            className="p-2 -ml-2 rounded-full hover:bg-muted transition-all active:scale-90"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <h1 className="text-xl font-black bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+            时间洞察
+          </h1>
+        </div>
       </div>
 
-      <div className="p-6 space-y-8">
+      <div className="p-6 space-y-10 relative z-10">
         {/* 游客模式云同步提示 */}
         {isGuest && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="p-4 bg-primary/5 border border-primary/10 rounded-3xl flex flex-col gap-3"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-4 rounded-[2rem] bg-amber-500/5 border border-amber-500/10 flex items-start gap-3"
           >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Cloud size={20} className="text-primary" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold">解锁云端同步与多端访问</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  当前数据仅存储在本设备。注册账号后，您的时间数据将获得永久云端备份，并可在任何设备上随时查看。
-                </p>
-              </div>
+            <div className="p-2 bg-amber-500/10 rounded-xl text-amber-600">
+              <Info size={18} />
             </div>
-            <button
-              onClick={() => navigate("/login")}
-              className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-            >
-              立即注册并同步数据
-            </button>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-amber-700/80 mb-0.5">
+                当前为本地访客模式
+              </p>
+              <p className="text-[10px] text-amber-600/60 leading-relaxed font-medium">
+                数据仅保存在此浏览器中，登录后可享受多端同步。
+              </p>
+            </div>
           </motion.div>
         )}
 
-        {/* 时间跨度选择器 */}
+        {/* 时间跨度选择 */}
         <div className="space-y-4">
-          <div className="flex p-1 bg-muted/30 rounded-2xl border border-border/50">
-            {[
-              { id: "today", label: "今天" },
-              { id: "7d", label: "近7日" },
-              { id: "30d", label: "近30日" },
-              { id: "all", label: "全部" },
-              { id: "custom", label: "自定义" },
-            ].map((p) => (
+          <div className="flex p-1.5 bg-muted/30 backdrop-blur-sm rounded-[1.5rem] border border-border/20">
+            {(["today", "7d", "30d", "all", "custom"] as const).map((p) => (
               <button
-                key={p.id}
-                onClick={() => setPeriod(p.id as Period)}
-                className={`flex-1 py-2 text-xs font-medium rounded-xl transition-all ${
-                  period === p.id
-                    ? "bg-background text-primary shadow-sm"
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`flex-1 py-2 text-[11px] font-black rounded-2xl transition-all tracking-wider ${
+                  period === p
+                    ? "bg-background shadow-md text-primary ring-1 ring-black/5"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {p.label}
+                {p === "today"
+                  ? "今日"
+                  : p === "7d"
+                    ? "近7日"
+                    : p === "30d"
+                      ? "近30日"
+                      : p === "all"
+                        ? "累计"
+                        : "自定义"}
               </button>
             ))}
           </div>
@@ -384,43 +388,43 @@ export const Analytics: React.FC = () => {
           <AnimatePresence>
             {period === "custom" && (
               <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+                initial={{ opacity: 0, height: 0, y: -10 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -10 }}
                 className="overflow-hidden"
               >
-                <div className="flex items-center gap-2 p-3 bg-muted/20 rounded-2xl border border-border/40">
+                <div className="flex items-center gap-3 p-4 bg-muted/20 rounded-[2rem] border border-border/40">
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] text-muted-foreground ml-1">
+                    <span className="text-[10px] font-bold text-muted-foreground/60 ml-2">
                       开始日期
-                    </label>
+                    </span>
                     <input
                       type="date"
                       value={customRange.start}
                       onChange={(e) =>
-                        setCustomRange((prev) => ({
-                          ...prev,
+                        setCustomRange({
+                          ...customRange,
                           start: e.target.value,
-                        }))
+                        })
                       }
-                      className="w-full bg-transparent text-sm font-medium focus:outline-none px-1"
+                      max={customRange.end}
+                      className="w-full bg-background/50 border border-border/40 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
-                  <div className="h-8 w-px bg-border/50 self-end mb-1" />
+                  <div className="w-4 h-px bg-border/60 mt-4" />
                   <div className="flex-1 space-y-1">
-                    <label className="text-[10px] text-muted-foreground ml-1">
+                    <span className="text-[10px] font-bold text-muted-foreground/60 ml-2">
                       结束日期
-                    </label>
+                    </span>
                     <input
                       type="date"
                       value={customRange.end}
                       onChange={(e) =>
-                        setCustomRange((prev) => ({
-                          ...prev,
-                          end: e.target.value,
-                        }))
+                        setCustomRange({ ...customRange, end: e.target.value })
                       }
-                      className="w-full bg-transparent text-sm font-medium focus:outline-none px-1"
+                      min={customRange.start}
+                      max={todayStr}
+                      className="w-full bg-background/50 border border-border/40 rounded-xl px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
                   </div>
                 </div>

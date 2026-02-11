@@ -20,9 +20,9 @@ export const AnalyticsStatCards: React.FC<AnalyticsStatCardsProps> = ({
         key={`records-${period}-${customRange.start}-${customRange.end}`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="p-4 rounded-3xl bg-primary/5 border border-primary/10 flex flex-col items-center justify-center text-center"
+        className="p-5 rounded-[2rem] bg-background/40 backdrop-blur-md border border-border/40 flex flex-col items-center justify-center text-center shadow-sm"
       >
-        <span className="text-xs text-muted-foreground mb-1">
+        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-2">
           {period === "all"
             ? "累计"
             : period === "custom"
@@ -30,9 +30,9 @@ export const AnalyticsStatCards: React.FC<AnalyticsStatCardsProps> = ({
               : `近${periodDays}日`}
           记录
         </span>
-        <div className="text-2xl font-bold text-primary">
+        <div className="text-3xl font-black text-primary flex items-baseline gap-1">
           {totalRecords}
-          <span className="text-xs ml-1 font-normal opacity-70">条</span>
+          <span className="text-[10px] font-bold text-primary/60">条</span>
         </div>
       </motion.div>
       <motion.div
@@ -40,12 +40,14 @@ export const AnalyticsStatCards: React.FC<AnalyticsStatCardsProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="p-4 rounded-3xl bg-secondary/5 border border-secondary/10 flex flex-col items-center justify-center text-center"
+        className="p-5 rounded-[2rem] bg-background/40 backdrop-blur-md border border-border/40 flex flex-col items-center justify-center text-center shadow-sm"
       >
-        <span className="text-xs text-muted-foreground mb-1">分析天数</span>
-        <div className="text-2xl font-bold text-secondary">
+        <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-2">
+          分析天数
+        </span>
+        <div className="text-3xl font-black text-foreground/80 flex items-baseline gap-1">
           {periodDays}
-          <span className="text-xs ml-1 font-normal opacity-70">天</span>
+          <span className="text-[10px] font-bold text-muted-foreground/60">天</span>
         </div>
       </motion.div>
     </div>
